@@ -43,7 +43,17 @@ for (const [i, whale] of whalecoiners.entries()) {
 // now that we got our accounts set up, we need the commitment to deploy our contract!
 initialCommitment = Tree.getRoot();
 
-
+export function str2int(str: string) {
+  return BigInt('0x' + str.split('').map(char => char.charCodeAt(0).toString(16)).join(''));
+}
+export function int2str(n: bigint) {
+  const hex = n.toString(16);
+  let s = '';
+  for (let idx = 0; idx < hex.length; idx += 2) {
+    s += String.fromCharCode(parseInt(hex.slice(idx, idx + 2), 16));
+  }
+  return s;
+}
 /**
  * Basic Example
  * See https://docs.minaprotocol.com/zkapps for more info.
@@ -59,28 +69,16 @@ export class Add extends SmartContract {
   // a commitment is a cryptographic primitive that allows us to commit to data, with the ability to "reveal" it later
   @state(Field) commitment = State<Field>();
 
-  str2int(str: string) {
-    return BigInt('0x' + str.split('').map(char => char.charCodeAt(0).toString(16)).join(''));
-  }
-  int2str(n: bigint) {
-    const hex = n.toString(16);
-    let s = '';
-    for (let idx = 0; idx < hex.length; idx += 2) {
-      s += String.fromCharCode(parseInt(hex.slice(idx, idx + 2), 16));
-    }
-    return s;
-  }
-
   // SmartContract.init() is a new method on the base SmartContract that will be called only during the first deploy (not if you re-deploy later to upgrade the contract) 
   init() {
     super.init();
     this.num.set(Field(1));
-    this.msg.set(Field(this.str2int('init')));
+    this.msg.set(Field(str2int('init')));
   }
 
   // copied from LeaderBoard - remove args
-  deploy(/*args: DeployArgs*/) {
-    super.deploy(/*args*/);
+  deploy(args: DeployArgs) {
+    super.deploy(args);
     this.setPermissions({
       ...Permissions.default(),
       editState: Permissions.proofOrSignature(),
@@ -90,20 +88,15 @@ export class Add extends SmartContract {
   }
 
   @method update() {
-    const currentState = this.num.get();
-    this.num.assertEquals(currentState); // precondition that links this.num.get() to the actual on-chain state
-    const newState = currentState.add(2);
+    const curNum = this.num.get();
+    this.num.assertEquals(curNum); // precondition that links this.num.get() to the actual on-chain state
+    const newState = curNum.add(2);
     this.num.set(newState);
-  }
-
-
-  beastNum() {
-    return 666;
   }
 
   // spray message on wall if you're whalish
   @method wallAsWhale(leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, msgNum: UInt32) {
-    // we fetch the on-chain commitment
+    // we fetch the on-chain commitment (root)
     let commitment = this.commitment.get();
     this.commitment.assertEquals(commitment);
 
@@ -111,23 +104,8 @@ export class Add extends SmartContract {
     const leafHash = Poseidon.hash(whalePub.toFields());
     path.calculateRoot(leafHash).assertEquals(commitment);
 
-    // gets the current root of the tree
-    const root = Tree.getRoot();
-
-    // gets a plain witness for leaf at index
-    // TODO look up index by whalePub in Tree
-    const wit = Tree.getWitness(leafIdx.toBigint());
-    //let w = Tree.getWitness(index);
-    let witness = new MyMerkleWitness(wit);
-
-    // calculates the root of the witness
-    const calculatedRoot = witness.calculateRoot(leafHash);
-
-    calculatedRoot.assertEquals(root);
-
-    // fake msg - updates 'wall msg' to the beast
-    this.num.set(Field(msgNum.toBigint()));
-    this.msg.set(Field(this.str2int('satoshi rulz')));
+    this.num.set(Field(666));
+    this.msg.set(Field(str2int('satoshi rulz')));
   }
 
 }

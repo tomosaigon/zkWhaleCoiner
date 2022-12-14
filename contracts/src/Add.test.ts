@@ -1,4 +1,4 @@
-import { Add } from './Add';
+import { Add, str2int, int2str } from './Add';
 import {
   isReady,
   shutdown,
@@ -56,7 +56,7 @@ describe('Add', () => {
   async function localDeploy() {
     const txn = await Mina.transaction(deployerAccount, () => {
       AccountUpdate.fundNewAccount(deployerAccount);
-      zkApp.deploy();
+      zkApp.deploy({zkappKey: zkAppPrivateKey});
     });
     await txn.prove();
     // this tx needs .sign(), because `deploy()` adds an account update that requires signature authorization
@@ -131,7 +131,6 @@ describe('Add', () => {
 
 
 
-
     // gets a plain witness for leaf at index
     const wit = Tree.getWitness(0n);
     //let w = Tree.getWitness(index);
@@ -154,13 +153,13 @@ describe('Add', () => {
     await txn.send();
 
     const updatedNum = zkApp.num.get();
-    const numOfBeast = zkApp.beastNum();
+    const numOfBeast = 666;
     expect(updatedNum).toEqual(Field(numOfBeast));
 
     const updatedMsg = zkApp.msg.get();
-    expect(updatedMsg).toEqual(Field(zkApp.str2int('satoshi rulz')));
+    expect(updatedMsg).toEqual(Field(str2int('satoshi rulz')));
 
-    console.log(zkApp.int2str(updatedMsg.toBigInt()));
+    console.log(int2str(updatedMsg.toBigInt()));
   });
 
 
