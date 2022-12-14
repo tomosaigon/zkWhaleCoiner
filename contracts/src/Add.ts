@@ -11,6 +11,8 @@ import {
   isReady,
   PrivateKey,
   CircuitString,
+  Signature,
+  Bool,
 } from 'snarkyjs';
 
 await isReady; // before new Field
@@ -95,7 +97,7 @@ export class Add extends SmartContract {
   }
 
   // spray message on wall if you're whalish
-  @method wallAsWhale(leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, msgNum: UInt32) {
+  @method wallAsWhale(leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature,  msgNum: UInt32) {
     // we fetch the on-chain commitment (root)
     let commitment = this.commitment.get();
     this.commitment.assertEquals(commitment);
@@ -103,6 +105,9 @@ export class Add extends SmartContract {
     // we check that the account is within the committed Merkle Tree
     const leafHash = Poseidon.hash(whalePub.toFields());
     path.calculateRoot(leafHash).assertEquals(commitment);
+
+    const msg = CircuitString.fromString('Satoshi is a WhaleCoiner').toFields();
+    sig.verify(whalePub, msg).assertTrue();
 
     this.num.set(Field(666));
     this.msg.set(Field(str2int('satoshi rulz')));

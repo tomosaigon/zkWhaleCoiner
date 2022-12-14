@@ -56,7 +56,7 @@ describe('Add', () => {
   async function localDeploy() {
     const txn = await Mina.transaction(deployerAccount, () => {
       AccountUpdate.fundNewAccount(deployerAccount);
-      zkApp.deploy({zkappKey: zkAppPrivateKey});
+      zkApp.deploy({ zkappKey: zkAppPrivateKey });
     });
     await txn.prove();
     // this tx needs .sign(), because `deploy()` adds an account update that requires signature authorization
@@ -113,26 +113,25 @@ describe('Add', () => {
     const msg = CircuitString.fromString('Satoshi is a WhaleCoiner').toFields();
     console.log('msg: ', msg.toString());
 
-    let fooPub;
+    let tomoPub: PublicKey;
 
-    fooPub = PublicKey.fromBase58('B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn');
-    const fooSig = Signature.fromJSON({
+    tomoPub = PublicKey.fromBase58('B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn');
+    const tomoSigAuro = Signature.fromJSON({
       r: "11149866380985503299463982621713898158386384905365504586658985081080436971813",
       s: "27805392407476107597780241785910086576642409128638979382253461373350709924352"
     });
-    // { r: '25035806521337665440111319757833589543077278755173930784255570407466670351151',
-    //   s: '27119246809613123032507629230116774860704142143647275177028353295362494904344' }
-    // using imported priv key
-    // fooSig:  { r: '26410926053396401287488712862065189809170449372867559686197910894390265634829',
-    //            s: '22716102842716352503424278477446440851221610774198281598416717640855283056079' }
-
-    const fooChecked = fooSig.verify(fooPub, msg);
-    expect(fooChecked).toBeTruthy();
+    const tomoSig = Signature.fromJSON({ // from own output
+      r: '19597419214007784520541222458812180796263440898540216855024484693705435829707',
+      s: '7316405554577028087944612376616228839987633145296848809121625898802082544438'
+    });
 
 
+    const tomoChecked = tomoSig.verify(tomoPub, msg);
+    console.log('verify sig: ', tomoChecked.toBoolean(), " - ", tomoChecked.toString());
+    expect(tomoChecked.toBoolean()).toBeTruthy();
 
     // gets a plain witness for leaf at index
-    const wit = Tree.getWitness(0n);
+    const wit = Tree.getWitness(0n); // XXX search for pubkey
     //let w = Tree.getWitness(index);
     let witness = new MyMerkleWitness(wit);
 
@@ -143,8 +142,9 @@ describe('Add', () => {
       // TODO add msg sig proving you're tomo0
       zkApp.wallAsWhale(
         UInt32.from(0n),
-        PublicKey.fromBase58('B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn'),
+        tomoPub,
         witness,
+        tomoSig,
         UInt32.from(666),
       );
 
