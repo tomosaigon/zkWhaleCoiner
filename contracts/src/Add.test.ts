@@ -7,6 +7,10 @@ import {
   PrivateKey,
   PublicKey,
   AccountUpdate,
+  MerkleTree,
+  MerkleWitness,
+  Poseidon,
+  UInt32,
 } from 'snarkyjs';
 
 /*
@@ -74,4 +78,56 @@ describe('Add', () => {
     const updatedNum = zkApp.num.get();
     expect(updatedNum).toEqual(Field(3));
   });
+
+  it('correctly proves witness', async () => {
+    await localDeploy();
+    //let addZKApp = new Add(PrivateKey.random().toPublicKey());
+
+    // Tree setup directly copied from contract
+    // creates the corresponding MerkleWitness class that is circuit-compatible
+    class MyMerkleWitness extends MerkleWitness(8) { }
+    const Tree = new MerkleTree(8);
+    // wholecoiner? whalecoiner
+    const whalecoiners = [
+      { n: 'tomo1', a: 'B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn' },
+      { n: 'tomo2', a: 'B62qn4NJzttY3bCz7936z7YZYBAS68RXdRbLrkRFh2wNGyJ3PRVW8fx' },
+      { n: 'CoinList', a: 'B62qmjZSQHakvWz7ZMkaaVW7ye1BpxdYABAMoiGk3u9bBaLmK5DJPkR' },
+      { n: 'OKEX', a: 'B62qpWaQoQoPL5AGta7Hz2DgJ9CJonpunjzCGTdw8KiCCD1hX8fNHuR' },
+      { n: 'Kraken', a: 'B62qkRodi7nj6W1geB12UuW2XAx2yidWZCcDthJvkf9G4A6G5GFasVQ' },
+      { n: 'Binance', a: 'B62qrRvo5wngd5WA1dgXkQpCdQMRDndusmjfWXWT1LgsSFFdBS9RCsV' },
+      { n: 'burn', a: 'B62qiburnzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzmp7r7UN6X' },
+    ];
+    for (const [i, whale] of whalecoiners.entries()) {
+      Tree.setLeaf(BigInt(i), Poseidon.hash(PublicKey.fromBase58(whale.a).toFields()));
+    }
+
+    // gets the current root of the tree
+    const root = Tree.getRoot();
+
+    // gets a plain witness for leaf at index
+    const wit = Tree.getWitness(0n);
+    //let w = Tree.getWitness(index);
+    let witness = new MyMerkleWitness(wit);
+
+
+    // call contract
+    const txn = await Mina.transaction(deployerAccount, () => {
+      //zkApp.update();
+      // TODO add msg sig proving you're tomo0
+      zkApp.wallAsWhale(
+        UInt32.from(0n),
+        PublicKey.fromBase58('B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn'),
+        witness
+      );
+
+    });
+    await txn.prove();
+    await txn.send();
+
+    const updatedNum = zkApp.num.get();
+    expect(updatedNum).toEqual(Field(666));
+  });
+
+
+
 });
