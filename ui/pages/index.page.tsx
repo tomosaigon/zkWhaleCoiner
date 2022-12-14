@@ -9,10 +9,12 @@ import {
   isReady,
   PublicKey,
   fetchAccount,
-} from 'snarkyjs';
+} from 'snarkyjs'; // not in examples
 
 export default function Home() {
+  // not in examples
   useEffect(() => {
+    console.log('index load test');
     (async () => {
       await isReady;
       const { Add } = await import('../../contracts/build/src/');
@@ -20,7 +22,9 @@ export default function Home() {
       // Update this to use the address (public key) for your zkApp account
       // To try it out, you can try this address for an example "Add" smart contract that we've deployed to 
       // Berkeley Testnet B62qisn669bZqsh8yMWkNyCA7RvjrL6gfdr3TQxymDHNhTc97xE5kNV
-      const zkAppAddress = '';
+      const tomoAddFork = 'B62qmv5LdsuGNjbccmJPRVt4EV15KDUri6gMbGiWa5XRNthcpdzwHtF';
+      const zkAppAddress_orig = 'B62qisn669bZqsh8yMWkNyCA7RvjrL6gfdr3TQxymDHNhTc97xE5kNV';
+      const zkAppAddress = tomoAddFork;
       // This should be removed once the zkAppAddress is updated.
       if (!zkAppAddress) {
         console.error(

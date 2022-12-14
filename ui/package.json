@@ -12,7 +12,7 @@
     "deploy": "next build && next export && touch out/.nojekyll  && git add -f out && git commit -m \"Deploy gh-pages\" && cd .. && git subtree push --prefix ui/out origin gh-pages"
   },
   "dependencies": {
-    "@types/node": "18.11.15",
+    "@types/node": "18.11.13",
     "@types/react": "18.0.26",
     "@types/react-dom": "18.0.9",
     "coi-serviceworker": "^0.1.6",
