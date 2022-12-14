@@ -148,7 +148,8 @@ describe('Add', () => {
       zkApp.wallAsWhale(
         UInt32.from(0n),
         PublicKey.fromBase58('B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn'),
-        witness
+        witness,
+        UInt32.from(666),
       );
 
     });

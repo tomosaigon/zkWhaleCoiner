@@ -87,26 +87,32 @@ export class Add extends SmartContract {
   }
 
   // spray message on wall if you're whalish
-  @method wallAsWhale(idx: UInt32, whale58: PublicKey, path: MyMerkleWitness) {
+  @method wallAsWhale(leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, msgNum: UInt32) {
     // we fetch the on-chain commitment
     let commitment = this.commitment.get();
     this.commitment.assertEquals(commitment);
 
     // we check that the account is within the committed Merkle Tree
-    // TODO pass in hash of pubkey instead
-    path.calculateRoot(Poseidon.hash(whale58.toFields())).assertEquals(commitment);
-
+    const leafHash = Poseidon.hash(whalePub.toFields());
+    path.calculateRoot(leafHash).assertEquals(commitment);
 
     // gets the current root of the tree
     const root = Tree.getRoot();
 
     // gets a plain witness for leaf at index
-    const wit = Tree.getWitness(idx.toBigint());
+    // TODO look up index by whalePub in Tree
+    const wit = Tree.getWitness(leafIdx.toBigint());
     //let w = Tree.getWitness(index);
     let witness = new MyMerkleWitness(wit);
 
+    // calculates the root of the witness
+    const calculatedRoot = witness.calculateRoot(leafHash);
+
+    calculatedRoot.assertEquals(root);
+
     // fake msg - updates 'wall msg' to the beast
-    this.num.set(Field(666));
+    //this.num.set(Field(666));
+    this.num.set(Field(msgNum.toBigint()));
   }
 
 }
