@@ -132,9 +132,6 @@ describe('Add', () => {
 
 
 
-    //const x = Field(2);
-    //const c = Character.fromString('a');
-
     // gets a plain witness for leaf at index
     const wit = Tree.getWitness(0n);
     //let w = Tree.getWitness(index);
@@ -159,6 +156,11 @@ describe('Add', () => {
     const updatedNum = zkApp.num.get();
     const numOfBeast = zkApp.beastNum();
     expect(updatedNum).toEqual(Field(numOfBeast));
+
+    const updatedMsg = zkApp.msg.get();
+    expect(updatedMsg).toEqual(Field(zkApp.str2int('satoshi rulz')));
+
+    console.log(zkApp.int2str(updatedMsg.toBigInt()));
   });
 
 

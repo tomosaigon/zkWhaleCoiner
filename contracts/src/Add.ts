@@ -10,6 +10,7 @@ import {
   Poseidon,
   isReady,
   PrivateKey,
+  CircuitString,
 } from 'snarkyjs';
 
 await isReady; // before new Field
@@ -54,13 +55,27 @@ initialCommitment = Tree.getRoot();
  */
 export class Add extends SmartContract {
   @state(Field) num = State<Field>();
+  @state(Field) msg = State<Field>(); // BigInt of ASCII to hex
   // a commitment is a cryptographic primitive that allows us to commit to data, with the ability to "reveal" it later
   @state(Field) commitment = State<Field>();
+
+  str2int(str: string) {
+    return BigInt('0x' + str.split('').map(char => char.charCodeAt(0).toString(16)).join(''));
+  }
+  int2str(n: bigint) {
+    const hex = n.toString(16);
+    let s = '';
+    for (let idx = 0; idx < hex.length; idx += 2) {
+      s += String.fromCharCode(parseInt(hex.slice(idx, idx + 2), 16));
+    }
+    return s;
+  }
 
   // SmartContract.init() is a new method on the base SmartContract that will be called only during the first deploy (not if you re-deploy later to upgrade the contract) 
   init() {
     super.init();
     this.num.set(Field(1));
+    this.msg.set(Field(this.str2int('init')));
   }
 
   // copied from LeaderBoard - remove args
@@ -111,8 +126,8 @@ export class Add extends SmartContract {
     calculatedRoot.assertEquals(root);
 
     // fake msg - updates 'wall msg' to the beast
-    //this.num.set(Field(666));
     this.num.set(Field(msgNum.toBigint()));
+    this.msg.set(Field(this.str2int('satoshi rulz')));
   }
 
 }
