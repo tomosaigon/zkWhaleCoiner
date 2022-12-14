@@ -82,6 +82,9 @@ export class Add extends SmartContract {
   }
 
 
+  beastNum() {
+    return 666;
+  }
 
   // spray message on wall if you're whalish
   @method wallAsWhale(idx: UInt32, whale58: PublicKey, path: MyMerkleWitness) {
@@ -101,6 +104,7 @@ export class Add extends SmartContract {
     const wit = Tree.getWitness(idx.toBigint());
     //let w = Tree.getWitness(index);
     let witness = new MyMerkleWitness(wit);
+
     // fake msg - updates 'wall msg' to the beast
     this.num.set(Field(666));
   }

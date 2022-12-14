@@ -11,6 +11,9 @@ import {
   MerkleWitness,
   Poseidon,
   UInt32,
+  Signature,
+  CircuitString,
+  Character,
 } from 'snarkyjs';
 
 /*
@@ -104,6 +107,35 @@ describe('Add', () => {
     // gets the current root of the tree
     const root = Tree.getRoot();
 
+    // r = field, s = scalar
+    //   const sig = Signature.fromJSON(`{
+    //     "r": "11149866380985503299463982621713898158386384905365504586658985081080436971813",
+    //     "s": "27805392407476107597780241785910086576642409128638979382253461373350709924352"
+    // }`);
+    const sig = new Signature(
+      Field("11149866380985503299463982621713898158386384905365504586658985081080436971813"),
+      Field("27805392407476107597780241785910086576642409128638979382253461373350709924352"));
+    const msg = Character.fromString('Satoshi is a WhaleCoiner').toField();
+    const point = PublicKey.fromBase58(whalecoiners[0].a).toGroup();
+    const foo = Poseidon.hash([Field(1234)]);
+    Poseidon.hash([Field(1234)]); //.concat([point.x, point.y, sig.r]));
+    //Poseidon.hash(msg.concat([point.x, point.y, this.r])).toBits()
+    Poseidon.hash([Field(1234)].concat([point.x, point.y]));
+    console.log("check if sig.r isConstant: ", sig.r.isConstant());
+    Poseidon.hash([Field(1234)].concat([point.x, point.y, sig.r])).toBits();
+    try {
+
+
+      const checked = sig.verify(PublicKey.fromBase58(whalecoiners[0].a), [msg]);
+      expect(checked).toBeTruthy();
+    } catch (e) {
+      console.log("sig failed, ", e);
+    }
+
+
+    //const x = Field(2);
+    //const c = Character.fromString('a');
+
     // gets a plain witness for leaf at index
     const wit = Tree.getWitness(0n);
     //let w = Tree.getWitness(index);
@@ -125,7 +157,8 @@ describe('Add', () => {
     await txn.send();
 
     const updatedNum = zkApp.num.get();
-    expect(updatedNum).toEqual(Field(666));
+    const numOfBeast = zkApp.beastNum();
+    expect(updatedNum).toEqual(Field(numOfBeast));
   });
 
 
