@@ -70,7 +70,13 @@ export default function App({ Component, pageProps }: AppProps) {
         await zkappWorkerClient.compileContract();
         console.log('zkApp compiled');
 
-        const zkappPublicKey = PublicKey.fromBase58('B62qph2VodgSo5NKn9gZta5BHNxppgZMDUihf1g7mXreL4uPJFXDGDA');
+        // https://berkeley.minaexplorer.com/wallet/B62qph2VodgSo5NKn9gZta5BHNxppgZMDUihf1g7mXreL4uPJFXDGDA/zkapp-transactions
+        // const zkappPublicKey = PublicKey.fromBase58('B62qph2VodgSo5NKn9gZta5BHNxppgZMDUihf1g7mXreL4uPJFXDGDA');
+        // Berkeley Testnet B62qisn669bZqsh8yMWkNyCA7RvjrL6gfdr3TQxymDHNhTc97xE5kNV
+        const tomoAddFork = 'B62qmv5LdsuGNjbccmJPRVt4EV15KDUri6gMbGiWa5XRNthcpdzwHtF';
+        //const zkAppAddress_orig = 'B62qisn669bZqsh8yMWkNyCA7RvjrL6gfdr3TQxymDHNhTc97xE5kNV';
+        const zkAppAddress = tomoAddFork;
+        const zkappPublicKey = PublicKey.fromBase58(zkAppAddress);
 
         await zkappWorkerClient.initZkappInstance(zkappPublicKey);
 
