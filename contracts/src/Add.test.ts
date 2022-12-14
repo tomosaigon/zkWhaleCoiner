@@ -14,6 +14,7 @@ import {
   Signature,
   CircuitString,
   Character,
+  Circuit,
 } from 'snarkyjs';
 
 /*
@@ -107,30 +108,28 @@ describe('Add', () => {
     // gets the current root of the tree
     const root = Tree.getRoot();
 
-    // r = field, s = scalar
-    //   const sig = Signature.fromJSON(`{
-    //     "r": "11149866380985503299463982621713898158386384905365504586658985081080436971813",
-    //     "s": "27805392407476107597780241785910086576642409128638979382253461373350709924352"
-    // }`);
-    const sig = new Signature(
-      Field("11149866380985503299463982621713898158386384905365504586658985081080436971813"),
-      Field("27805392407476107597780241785910086576642409128638979382253461373350709924352"));
-    const msg = Character.fromString('Satoshi is a WhaleCoiner').toField();
-    const point = PublicKey.fromBase58(whalecoiners[0].a).toGroup();
-    const foo = Poseidon.hash([Field(1234)]);
-    Poseidon.hash([Field(1234)]); //.concat([point.x, point.y, sig.r]));
-    //Poseidon.hash(msg.concat([point.x, point.y, this.r])).toBits()
-    Poseidon.hash([Field(1234)].concat([point.x, point.y]));
-    console.log("check if sig.r isConstant: ", sig.r.isConstant());
-    Poseidon.hash([Field(1234)].concat([point.x, point.y, sig.r])).toBits();
-    try {
+    // DOH fromString only looks at 1st char
+    //const msg = [Character.fromString('Satoshi is a WhaleCoiner').toField()];
+    const msg = CircuitString.fromString('Satoshi is a WhaleCoiner').toFields();
+    console.log('msg: ', msg.toString());
+
+    let fooPub;
+
+    fooPub = PublicKey.fromBase58('B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn');
+    const fooSig = Signature.fromJSON({
+      r: "11149866380985503299463982621713898158386384905365504586658985081080436971813",
+      s: "27805392407476107597780241785910086576642409128638979382253461373350709924352"
+    });
+    // { r: '25035806521337665440111319757833589543077278755173930784255570407466670351151',
+    //   s: '27119246809613123032507629230116774860704142143647275177028353295362494904344' }
+    // using imported priv key
+    // fooSig:  { r: '26410926053396401287488712862065189809170449372867559686197910894390265634829',
+    //            s: '22716102842716352503424278477446440851221610774198281598416717640855283056079' }
+
+    const fooChecked = fooSig.verify(fooPub, msg);
+    expect(fooChecked).toBeTruthy();
 
 
-      const checked = sig.verify(PublicKey.fromBase58(whalecoiners[0].a), [msg]);
-      expect(checked).toBeTruthy();
-    } catch (e) {
-      console.log("sig failed, ", e);
-    }
 
 
     //const x = Field(2);
