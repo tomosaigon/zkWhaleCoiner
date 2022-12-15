@@ -10,6 +10,8 @@ const nextConfig = {
       snarkyjs: require('path').resolve('node_modules/snarkyjs'),
     }
     config.optimization.minimizer = [];
+    // TOMOFIX
+    config.experiments = { ...config.experiments, ...{ topLevelAwait: true }};
     return config;
   },
   // To enable SnarkyJS for the web, we must set the COOP and COEP headers.
