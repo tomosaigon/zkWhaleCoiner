@@ -1,4 +1,4 @@
-import { Add, str2int, int2str } from './Add';
+import { WhaleCoiner, str2int, int2str } from './Add';
 import {
   isReady,
   shutdown,
@@ -16,6 +16,7 @@ import {
   Character,
   Circuit,
 } from 'snarkyjs';
+import whales from '../whales.json';
 
 /*
  * This file specifies how to test the `Add` example smart contract. It is safe to delete this file and replace
@@ -26,15 +27,15 @@ import {
 
 let proofsEnabled = false;
 
-describe('Add', () => {
+describe('WhaleCoiner', () => {
   let deployerAccount: PrivateKey,
     zkAppAddress: PublicKey,
     zkAppPrivateKey: PrivateKey,
-    zkApp: Add;
+    zkApp: WhaleCoiner;
 
   beforeAll(async () => {
     await isReady;
-    if (proofsEnabled) Add.compile();
+    if (proofsEnabled) WhaleCoiner.compile();
   });
 
   beforeEach(() => {
@@ -43,7 +44,7 @@ describe('Add', () => {
     deployerAccount = Local.testAccounts[0].privateKey;
     zkAppPrivateKey = PrivateKey.random();
     zkAppAddress = zkAppPrivateKey.toPublicKey();
-    zkApp = new Add(zkAppAddress);
+    zkApp = new WhaleCoiner(zkAppAddress);
   });
 
   afterAll(() => {
@@ -63,13 +64,13 @@ describe('Add', () => {
     await txn.sign([zkAppPrivateKey]).send();
   }
 
-  it('generates and deploys the `Add` smart contract', async () => {
+  it('generates and deploys the `WhaleCoiner` smart contract', async () => {
     await localDeploy();
     const num = zkApp.num.get();
     expect(num).toEqual(Field(1));
   });
 
-  it('correctly updates the num state on the `Add` smart contract', async () => {
+  it('correctly updates the num state on the `WhaleCoiner` smart contract', async () => {
     await localDeploy();
 
     // update transaction
@@ -85,24 +86,17 @@ describe('Add', () => {
 
   it('correctly proves witness', async () => {
     await localDeploy();
-    //let addZKApp = new Add(PrivateKey.random().toPublicKey());
+    //let whaleCoinerZKApp = new WhaleCoiner(PrivateKey.random().toPublicKey());
 
     // Tree setup directly copied from contract
     // creates the corresponding MerkleWitness class that is circuit-compatible
     class MyMerkleWitness extends MerkleWitness(8) { }
     const Tree = new MerkleTree(8);
-    // wholecoiner? whalecoiner
-    const whalecoiners = [
-      { n: 'tomo1', a: 'B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn' },
-      { n: 'tomo2', a: 'B62qn4NJzttY3bCz7936z7YZYBAS68RXdRbLrkRFh2wNGyJ3PRVW8fx' },
-      { n: 'CoinList', a: 'B62qmjZSQHakvWz7ZMkaaVW7ye1BpxdYABAMoiGk3u9bBaLmK5DJPkR' },
-      { n: 'OKEX', a: 'B62qpWaQoQoPL5AGta7Hz2DgJ9CJonpunjzCGTdw8KiCCD1hX8fNHuR' },
-      { n: 'Kraken', a: 'B62qkRodi7nj6W1geB12UuW2XAx2yidWZCcDthJvkf9G4A6G5GFasVQ' },
-      { n: 'Binance', a: 'B62qrRvo5wngd5WA1dgXkQpCdQMRDndusmjfWXWT1LgsSFFdBS9RCsV' },
-      { n: 'burn', a: 'B62qiburnzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzmp7r7UN6X' },
-    ];
-    for (const [i, whale] of whalecoiners.entries()) {
-      Tree.setLeaf(BigInt(i), Poseidon.hash(PublicKey.fromBase58(whale.a).toFields()));
+
+    for (const [i, whale] of whales.entries()) {
+      if (whale.a.slice(0, 2) == 'B6') {
+        Tree.setLeaf(BigInt(i), Poseidon.hash(PublicKey.fromBase58(whale.a).toFields()));
+      }
     }
 
     // gets the current root of the tree
@@ -111,19 +105,34 @@ describe('Add', () => {
     // DOH fromString only looks at 1st char
     //const msg = [Character.fromString('Satoshi is a WhaleCoiner').toField()];
     const msg = CircuitString.fromString('Satoshi is a WhaleCoiner').toFields();
-    console.log('msg: ', msg.toString());
+    console.log('msg: ',
+      msg.toString().split(',').map(c => parseInt(c)).filter(c => c).map(c => String.fromCharCode(c)).join('')
+    );
 
-    let tomoPub: PublicKey;
 
-    tomoPub = PublicKey.fromBase58('B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn');
+    let tomoPub = PublicKey.fromBase58('B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn');
+
+    const fooSig1 = Signature.fromJSON({
+      r: '24756403745565155334343141240729212829194956404851084071603591710242651547325',
+      s: '25284399962144351938259578951164638075292706477803146509961794774712565708371'
+    })
+    //tomoPub = fooKey.toPublicKey();
+
+
     const tomoSigAuro = Signature.fromJSON({
       r: "11149866380985503299463982621713898158386384905365504586658985081080436971813",
       s: "27805392407476107597780241785910086576642409128638979382253461373350709924352"
     });
-    const tomoSig = Signature.fromJSON({ // from own output
+    const tomoSigOwn = Signature.fromJSON({ // from own output - this works
       r: '19597419214007784520541222458812180796263440898540216855024484693705435829707',
       s: '7316405554577028087944612376616228839987633145296848809121625898802082544438'
     });
+    const tomoNpmMinaSignerOut = {
+      field: '8005018942614542706250585243584469278747533320709578447354802418704441457793',
+      scalar: '9120404633846659608341680286080991228565833476950561366538862828260360631745'
+    };
+    //const tomoSig = Signature.fromJSON({ r: tomoNpmMinaSignerOut.field, s: tomoNpmMinaSignerOut.scalar });
+    const tomoSig = fooSig1;
 
 
     const tomoChecked = tomoSig.verify(tomoPub, msg);
@@ -146,6 +155,7 @@ describe('Add', () => {
         witness,
         tomoSig,
         UInt32.from(666),
+        Field(str2int('satoshi rulz')),
       );
 
     });

@@ -14,6 +14,7 @@ import {
   Signature,
   Bool,
 } from 'snarkyjs';
+import whales from '../whales.json';
 
 await isReady; // before new Field
 
@@ -28,18 +29,11 @@ class MyMerkleWitness extends MerkleWitness(8) { }
 
 
 const Tree = new MerkleTree(8);
-// wholecoiner? whalecoiner
-const whalecoiners = [
-  { n: 'tomo1', a: 'B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn' },
-  { n: 'tomo2', a: 'B62qn4NJzttY3bCz7936z7YZYBAS68RXdRbLrkRFh2wNGyJ3PRVW8fx' },
-  { n: 'CoinList', a: 'B62qmjZSQHakvWz7ZMkaaVW7ye1BpxdYABAMoiGk3u9bBaLmK5DJPkR' },
-  { n: 'OKEX', a: 'B62qpWaQoQoPL5AGta7Hz2DgJ9CJonpunjzCGTdw8KiCCD1hX8fNHuR' },
-  { n: 'Kraken', a: 'B62qkRodi7nj6W1geB12UuW2XAx2yidWZCcDthJvkf9G4A6G5GFasVQ' },
-  { n: 'Binance', a: 'B62qrRvo5wngd5WA1dgXkQpCdQMRDndusmjfWXWT1LgsSFFdBS9RCsV' },
-  { n: 'burn', a: 'B62qiburnzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzmp7r7UN6X' },
-];
-for (const [i, whale] of whalecoiners.entries()) {
-  Tree.setLeaf(BigInt(i), Poseidon.hash(PublicKey.fromBase58(whale.a).toFields()));
+
+for (const [i, whale] of whales.entries()) {
+  if (whale.a.slice(0, 2) == 'B6') {
+    Tree.setLeaf(BigInt(i), Poseidon.hash(PublicKey.fromBase58(whale.a).toFields()));
+  }
 }
 
 // now that we got our accounts set up, we need the commitment to deploy our contract!
@@ -65,7 +59,7 @@ export function int2str(n: bigint) {
  *
  * This file is safe to delete and replace with your own contract.
  */
-export class Add extends SmartContract {
+export class WhaleCoiner extends SmartContract {
   @state(Field) num = State<Field>();
   @state(Field) msg = State<Field>(); // BigInt of ASCII to hex
   // a commitment is a cryptographic primitive that allows us to commit to data, with the ability to "reveal" it later
@@ -97,7 +91,7 @@ export class Add extends SmartContract {
   }
 
   // spray message on wall if you're whalish
-  @method wallAsWhale(leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature,  msgNum: UInt32) {
+  @method wallAsWhale(leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature,  num: UInt32, wallMsg: Field) {
     // we fetch the on-chain commitment (root)
     let commitment = this.commitment.get();
     this.commitment.assertEquals(commitment);
@@ -109,8 +103,8 @@ export class Add extends SmartContract {
     const msg = CircuitString.fromString('Satoshi is a WhaleCoiner').toFields();
     sig.verify(whalePub, msg).assertTrue();
 
-    this.num.set(Field(666));
-    this.msg.set(Field(str2int('satoshi rulz')));
+    this.num.set(Field(num.toFields()[0]));
+    this.msg.set(wallMsg); // str2int
   }
 
 }
