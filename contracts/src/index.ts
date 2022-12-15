@@ -1,3 +1,3 @@
-import { Add } from './Add.js';
+import { WhaleCoiner } from './WhaleCoiner.js';
 
-export { Add };
+export { WhaleCoiner };
