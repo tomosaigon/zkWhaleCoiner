@@ -1,3 +1,6 @@
+import Head from 'next/head';
+import Image from 'next/image';
+import styles from '../styles/Home.module.css';
 import '../styles/globals.css'
 import type { AppProps } from 'next/app'
 
@@ -17,6 +20,117 @@ import {
 let transactionFee = 0.1;
 // end copy
 
+// TODO fetch and pass in committed merkle root
+function SignedMessage(props: any) {
+  let [sig, setSig] = useState({ r: '', s: '' });
+  const whaleMsg = 'Satoshi is a WhaleCoiner';
+  const whalecoiners = [
+    { n: 'tomo1', a: 'B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn' },
+    { n: 'tomo2', a: 'B62qn4NJzttY3bCz7936z7YZYBAS68RXdRbLrkRFh2wNGyJ3PRVW8fx' },
+    { n: 'CoinList', a: 'B62qmjZSQHakvWz7ZMkaaVW7ye1BpxdYABAMoiGk3u9bBaLmK5DJPkR' },
+    { n: 'OKEX', a: 'B62qpWaQoQoPL5AGta7Hz2DgJ9CJonpunjzCGTdw8KiCCD1hX8fNHuR' },
+    { n: 'Kraken', a: 'B62qkRodi7nj6W1geB12UuW2XAx2yidWZCcDthJvkf9G4A6G5GFasVQ' },
+    { n: 'Binance', a: 'B62qrRvo5wngd5WA1dgXkQpCdQMRDndusmjfWXWT1LgsSFFdBS9RCsV' },
+    { n: 'burn', a: 'B62qiburnzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzmp7r7UN6X' },
+  ];
+  let [query, setQuery] = useState('');
+  let [searchResults, setSearchResults] = useState(['']);
+  const whaleSearch = () => setSearchResults(whalecoiners.filter(w => w.a.search(query) != -1).map(w => w.a));
+  let [newWallMsg, setNewWallMsg] = useState('');
+
+
+  return <div className={styles.container}>
+
+    <div className={styles.container} style={{ backgroundColor: 'yellow' }}>
+      <h2>This message currently appears on the sacred WhaleCoiners Wall:</h2>
+      <div className={styles.card}>
+        <code>{props.wallMsg.toString()}</code>
+        <h1>satoshi rulz</h1>
+      </div>
+      <p>Only WhaleCoiners can write to this wall. We don't know who wrote on the wall,
+        only that they proved they were a WhaleCoiner. By the magic of zero knowledge proofs.</p>
+    </div>
+
+    <div className={styles.container} style={{ backgroundColor: 'violet' }}>
+      <h3>Check if an address is in the computed WhaleCoiners list which hashes to this Merkle tree root:</h3>
+      <div className={styles.code}>
+        11498032990274737164207907745577872827449729229431235048917552227435182651432
+      </div>
+      <p>List has been pre-computed and can be
+        verified here: <a href="#">ipfs://</a></p>
+      <div className={styles.card}>
+        <input onChange={(e) => setQuery(e.target.value)} value={query} />
+        <button onClick={whaleSearch}>Search</button>
+        <h3>Search results</h3>
+        <div className={styles.code}>
+          <code>
+            {searchResults.join('\n')}
+          </code>
+        </div>
+      </div>
+    </div>
+
+    <div className={styles.container} style={{ backgroundColor: 'cyan' }}>
+      <h2>Prove you're a Whale by signing the following message</h2>
+      <span>```</span>
+      <div className={styles.code}>Satoshi is a WhaleCoiner</div>
+      <span>```</span>
+      <p>Copy the message text above and sign it with your Bitcoin, Ethereum,
+        or Mina (depending on compatibility) wallet using an address/public key
+        listed in the WhaleCoiner database.
+      </p>
+    </div>
+
+    <div className={styles.container} style={{ backgroundColor: 'beige' }}>
+      <h2>Your Signature</h2>
+      <div>
+        <label>
+          field (r):
+          <input name="field" value={sig.r} style={{ width: '100%' }} onChange={(e) => setSig({ r: e.target.value, s: sig.s })} />
+        </label>
+      </div>
+      <div>
+        <label>
+          scalar (s):
+          <input name="scalar" value={sig.s} style={{ width: '100%' }} onChange={(e) => setSig({ r: sig.r, s: e.target.value })} />
+        </label>
+      </div>
+      <div className={styles.card}>
+        <button onClick={async () => {
+          const mina = (window as any).mina;
+          let res = await mina.signMessage({ message: whaleMsg, });
+          console.log(res);
+          setSig({ r: res.signature.field, s: res.signature.scalar });
+        }}>Sign message via connected Auro</button>
+      </div>
+    </div>
+
+    <div className={styles.container} style={{ backgroundColor: 'gold' }}>
+      <h2>Write your message on the wall</h2>
+      <div>
+        <label>
+          Your new message:
+          <input name="field" value={sig.r} style={{ width: '100%' }} onChange={(e) => setSig({ r: e.target.value, s: sig.s })} />
+        </label>
+      </div>
+
+      <div className={styles.card}>
+        <button onClick={async () => {
+          /*
+          const mina = (window as any).mina;
+          let res = await mina.signMessage({ message: whaleMsg, });
+          console.log(res);
+          setSig({ r: res.signature.field, s: res.signature.scalar });
+          */
+        }}>Write on wall</button>
+        <button onClick={() => props.onSendTransaction()} >click me</button>
+      </div>
+
+    </div>
+
+  </div>
+
+}
 export default function App({ Component, pageProps }: AppProps) {
   // original not from example
   // return <Component {...pageProps} />
@@ -29,10 +143,12 @@ export default function App({ Component, pageProps }: AppProps) {
     hasBeenSetup: false,
     accountExists: false,
     currentNum: null as null | Field,
+    currentMsg: null as null | Field,
     publicKey: null as null | PublicKey,
     zkappPublicKey: null as null | PublicKey,
     creatingTransaction: false,
   });
+  let [sig, setSig] = useState({ r: 'field number', s: 'scalar' });
 
   // -------------------------------------------------------
   // Do Setup
@@ -74,6 +190,7 @@ export default function App({ Component, pageProps }: AppProps) {
         // const zkappPublicKey = PublicKey.fromBase58('B62qph2VodgSo5NKn9gZta5BHNxppgZMDUihf1g7mXreL4uPJFXDGDA');
         // Berkeley Testnet B62qisn669bZqsh8yMWkNyCA7RvjrL6gfdr3TQxymDHNhTc97xE5kNV
         const tomoAddFork = 'B62qmv5LdsuGNjbccmJPRVt4EV15KDUri6gMbGiWa5XRNthcpdzwHtF';
+        //const tomoAddFinal = 'B62qmv5LdsuGNjbccmJPRVt4EV15KDUri6gMbGiWa5XRNthcpdzwHtF'
         //const zkAppAddress_orig = 'B62qisn669bZqsh8yMWkNyCA7RvjrL6gfdr3TQxymDHNhTc97xE5kNV';
         const zkAppAddress = tomoAddFork;
         const zkappPublicKey = PublicKey.fromBase58(zkAppAddress);
@@ -84,6 +201,8 @@ export default function App({ Component, pageProps }: AppProps) {
         await zkappWorkerClient.fetchAccount({ publicKey: zkappPublicKey })
         const currentNum = await zkappWorkerClient.getNum();
         console.log('current state:', currentNum.toString());
+        const currentMsg = await zkappWorkerClient.getMsg();
+        console.log('current state:', currentNum.toString());
 
         setState({
           ...state,
@@ -93,7 +212,8 @@ export default function App({ Component, pageProps }: AppProps) {
           publicKey,
           zkappPublicKey,
           accountExists,
-          currentNum
+          currentNum,
+          currentMsg,
         });
       }
     })();
@@ -164,6 +284,15 @@ export default function App({ Component, pageProps }: AppProps) {
     setState({ ...state, currentNum });
   }
 
+  const onRefreshCurrentMsg = async () => {
+    console.log('getting zkApp state...');
+    await state.zkappWorkerClient!.fetchAccount({ publicKey: state.zkappPublicKey! })
+    const currentMsg = await state.zkappWorkerClient!.getMsg();
+    console.log('current msg state:', currentMsg/*.toString()*/);
+
+    setState({ ...state, currentMsg });
+  }
+
   // -------------------------------------------------------
   // Create UI elements
 
@@ -187,19 +316,42 @@ export default function App({ Component, pageProps }: AppProps) {
   }
 
   let mainContent;
+  const whaleMsg = 'Satoshi is a WhaleCoiner';
   if (state.hasBeenSetup && state.accountExists) {
     mainContent = <div>
       <button onClick={onSendTransaction} disabled={state.creatingTransaction}> Send Transaction </button>
       <div> Current Number in zkApp: {state.currentNum!.toString()} </div>
       <button onClick={onRefreshCurrentNum}> Get Latest State </button>
+      <div> Current msg in zkApp: {state.currentMsg!.toString()} </div>
+      <button onClick={onRefreshCurrentMsg}> Get Latest State </button>
+      <div>
+
+
+      </div>
     </div>
   }
 
-  return <div>
-    {setup}
-    {accountDoesNotExist}
-    {mainContent}
-  </div>
+  return <div className={styles.container}>
+    <Head>
+      <title>WhaleCoiner</title>
+      <meta name="description" content="Zero knowledge proof that you are a WhaleCoiner" />
+      <link rel="icon" href="/favicon.ico" />
+    </Head>
+
+    <main className={styles.main}>
+      <h1 className={styles.title}>
+        Welcome to <a href="#">WhaleCoiner!</a>
+      </h1>
+      {setup}
+      {accountDoesNotExist}
+      {mainContent}
+      <SignedMessage
+        wallMsg={state.currentMsg}
+        onRefreshCurrentMsg={onRefreshCurrentMsg}
+        onSendTransaction={(x: void) => console.log('sig ', x)}
+      />
+    </main>
+  </div >
 
 
 }

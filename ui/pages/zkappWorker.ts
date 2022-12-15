@@ -33,7 +33,7 @@ const functions = {
   },
   loadContract: async (args: {}) => {
     const { Add } = await import('../../contracts/build/src/Add.js');
-    state.Add = Add;
+    state.Add = Add; // XXX cached??? 
   },
   compileContract: async (args: {}) => {
     await state.Add!.compile();
@@ -49,6 +49,10 @@ const functions = {
   getNum: async (args: {}) => {
     const currentNum = await state.zkapp!.num.get();
     return JSON.stringify(currentNum.toJSON());
+  },
+  getMsg: async (args: {}) => {
+    const currentMsg = await state.zkapp!.msg.get();
+    return JSON.stringify(currentMsg.toJSON());
   },
   createUpdateTransaction: async (args: {}) => {
     const transaction = await Mina.transaction(() => {

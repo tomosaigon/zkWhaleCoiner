@@ -41,6 +41,11 @@ export default class ZkappWorkerClient {
     return Field.fromJSON(JSON.parse(result as string));
   }
 
+  async getMsg(): Promise<Field> {
+    const result = await this._call('getMsg', {});
+    return Field.fromJSON(JSON.parse(result as string));
+  }
+
   createUpdateTransaction() {
     return this._call('createUpdateTransaction', {});
   }
