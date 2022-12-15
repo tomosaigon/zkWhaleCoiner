@@ -5,6 +5,7 @@ import '../styles/globals.css'
 import type { AppProps } from 'next/app'
 
 import './reactCOIServiceWorker';
+import whales from '../../whales.json';
 
 // copied from example
 import { useEffect, useState } from "react";
@@ -24,18 +25,9 @@ let transactionFee = 0.1;
 function SignedMessage(props: any) {
   let [sig, setSig] = useState({ r: '', s: '' });
   const whaleMsg = 'Satoshi is a WhaleCoiner';
-  const whalecoiners = [
-    { n: 'tomo1', a: 'B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn' },
-    { n: 'tomo2', a: 'B62qn4NJzttY3bCz7936z7YZYBAS68RXdRbLrkRFh2wNGyJ3PRVW8fx' },
-    { n: 'CoinList', a: 'B62qmjZSQHakvWz7ZMkaaVW7ye1BpxdYABAMoiGk3u9bBaLmK5DJPkR' },
-    { n: 'OKEX', a: 'B62qpWaQoQoPL5AGta7Hz2DgJ9CJonpunjzCGTdw8KiCCD1hX8fNHuR' },
-    { n: 'Kraken', a: 'B62qkRodi7nj6W1geB12UuW2XAx2yidWZCcDthJvkf9G4A6G5GFasVQ' },
-    { n: 'Binance', a: 'B62qrRvo5wngd5WA1dgXkQpCdQMRDndusmjfWXWT1LgsSFFdBS9RCsV' },
-    { n: 'burn', a: 'B62qiburnzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzmp7r7UN6X' },
-  ];
   let [query, setQuery] = useState('');
   let [searchResults, setSearchResults] = useState(['']);
-  const whaleSearch = () => setSearchResults(whalecoiners.filter(w => w.a.search(query) != -1).map(w => w.a));
+  const whaleSearch = () => setSearchResults(whales.filter(w => w.a.search(query) != -1).map(w => w.a));
   let [newWallMsg, setNewWallMsg] = useState('');
 
 
@@ -44,7 +36,7 @@ function SignedMessage(props: any) {
     <div className={styles.container} style={{ backgroundColor: 'yellow' }}>
       <h2>This message currently appears on the sacred WhaleCoiners Wall:</h2>
       <div className={styles.card}>
-        <code>{props.wallMsg.toString()}</code>
+        <code>{props.wallMsg?.toString()}</code>
         <h1>satoshi rulz</h1>
       </div>
       <p>Only WhaleCoiners can write to this wall. We don't know who wrote on the wall,
@@ -57,7 +49,7 @@ function SignedMessage(props: any) {
         11498032990274737164207907745577872827449729229431235048917552227435182651432
       </div>
       <p>List has been pre-computed and can be
-        verified here: <a href="#">ipfs://</a></p>
+        verified here: <a href="https://nftstorage.link/ipfs/bafkreig6xuovd5lqxaalr4bx6bj6oeuufy77nngq2gq5ciciisp7ttmbay">ipfs://bafkreig6xuovd5lqxaalr4bx6bj6oeuufy77nngq2gq5ciciisp7ttmbay</a></p>
       <div className={styles.card}>
         <input onChange={(e) => setQuery(e.target.value)} value={query} />
         <button onClick={whaleSearch}>Search</button>
