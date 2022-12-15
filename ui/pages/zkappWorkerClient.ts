@@ -3,9 +3,12 @@ import {
   PublicKey,
   PrivateKey,
   Field,
+  UInt32,
+  Signature,
 } from 'snarkyjs'
 
 import type { ZkappWorkerRequest, ZkappWorkerReponse, WorkerFunctions } from './zkappWorker';
+import type { MyMerkleWitness } from '../../contracts/src/WhaleCoiner';
 
 export default class ZkappWorkerClient {
 
@@ -52,6 +55,15 @@ export default class ZkappWorkerClient {
 
   proveUpdateTransaction() {
     return this._call('proveUpdateTransaction', {});
+  }
+
+  createWallTransaction(/*leafIdx: UInt32,*/ whalePub: PublicKey, /*path: MyMerkleWitness,*/ sig: Signature, /*num: UInt32,*/ wallMsg: Field) {
+    // createWallTransaction: async (args: { leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, num: UInt32, wallMsg: Field }) 
+    return this._call('createWallTransaction', {/*leafIdx,*/ whalePub, /*path,*/ sig, /*num,*/ wallMsg});
+  }
+
+  proveWallTransaction() {
+    return this._call('proveWallTransaction', {});
   }
 
   async getTransactionJSON() {

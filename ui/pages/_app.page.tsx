@@ -16,19 +16,46 @@ import {
   PublicKey,
   PrivateKey,
   Field,
+  UInt32,
+  Signature,
+  MerkleTree,
+  MerkleWitness,
+  Poseidon,
 } from 'snarkyjs'
+import { sign } from 'crypto';
+import { WhaleCoiner } from '../../contracts/build/src';
+
+// XXX copy code here for now
+//import { MyMerkleWitness, str2int, int2str } from '../../contracts/src/WhaleCoiner';
+// You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+class MyMerkleWitness extends MerkleWitness(8) { }
+function str2int(str: string) {
+  return BigInt('0x' + str.split('').map(char => char.charCodeAt(0).toString(16)).join(''));
+}
+function int2str(n: bigint) {
+  const hex = n.toString(16);
+  let s = '';
+  for (let idx = 0; idx < hex.length; idx += 2) {
+    s += String.fromCharCode(parseInt(hex.slice(idx, idx + 2), 16));
+  }
+  return s;
+}
+
+
 
 let transactionFee = 0.1;
 // end copy
 
+
 // TODO fetch and pass in committed merkle root
 function SignedMessage(props: any) {
-  let [sig, setSig] = useState({ r: '', s: '' });
+  let [newSig, setSig] = useState({ r: '', s: '' });
+  let [newAddr, setAddr] = useState('');
   const whaleMsg = 'Satoshi is a WhaleCoiner';
   let [query, setQuery] = useState('');
   let [searchResults, setSearchResults] = useState(['']);
   const whaleSearch = () => setSearchResults(whales.filter(w => w.a.search(query) != -1).map(w => w.a));
-  let [newWallMsg, setNewWallMsg] = useState('');
+  let [newWallMsg, setWallMsg] = useState('');
 
 
   return <div className={styles.container}>
@@ -36,8 +63,8 @@ function SignedMessage(props: any) {
     <div className={styles.container} style={{ backgroundColor: 'yellow' }}>
       <h2>This message currently appears on the sacred WhaleCoiners Wall:</h2>
       <div className={styles.card}>
-        <code>{props.wallMsg?.toString()}</code>
-        <h1>satoshi rulz</h1>
+        <h1><code>{props.wallMsg ? int2str(props.wallMsg.toBigInt()) : 'loading wall msg...'}</code></h1>
+        <span>your msg: {newWallMsg}</span>
       </div>
       <p>Only WhaleCoiners can write to this wall. We don't know who wrote on the wall,
         only that they proved they were a WhaleCoiner. By the magic of zero knowledge proofs.</p>
@@ -50,9 +77,10 @@ function SignedMessage(props: any) {
       </div>
       <p>List has been pre-computed and can be
         verified here: <a href="https://nftstorage.link/ipfs/bafkreig6xuovd5lqxaalr4bx6bj6oeuufy77nngq2gq5ciciisp7ttmbay">ipfs://bafkreig6xuovd5lqxaalr4bx6bj6oeuufy77nngq2gq5ciciisp7ttmbay</a></p>
-      <div className={styles.card}>
+      <div className={styles.card} style={{maxWidth:'100%'}}>
         <input onChange={(e) => setQuery(e.target.value)} value={query} />
-        <button onClick={whaleSearch}>Search</button>
+        <button onClick={whaleSearch}>Search substring</button>
+      
         <h3>Search results</h3>
         <div className={styles.code}>
           <code>
@@ -77,23 +105,33 @@ function SignedMessage(props: any) {
       <h2>Your Signature</h2>
       <div>
         <label>
+          Public Key (address):
+          <input name="field" value={newAddr} style={{ width: '100%' }} onChange={(e) => setAddr(e.target.value)} />
+        </label>
+      </div>      <div>
+        <label>
           field (r):
-          <input name="field" value={sig.r} style={{ width: '100%' }} onChange={(e) => setSig({ r: e.target.value, s: sig.s })} />
+          <input name="field" value={newSig.r} style={{ width: '100%' }} onChange={(e) => setSig({ r: e.target.value, s: newSig.s })} />
         </label>
       </div>
       <div>
         <label>
           scalar (s):
-          <input name="scalar" value={sig.s} style={{ width: '100%' }} onChange={(e) => setSig({ r: sig.r, s: e.target.value })} />
+          <input name="scalar" value={newSig.s} style={{ width: '100%' }} onChange={(e) => setSig({ r: newSig.r, s: e.target.value })} />
         </label>
       </div>
       <div className={styles.card}>
         <button onClick={async () => {
           const mina = (window as any).mina;
+          setAddr((await mina.requestAccounts())[0]);
           let res = await mina.signMessage({ message: whaleMsg, });
           console.log(res);
           setSig({ r: res.signature.field, s: res.signature.scalar });
         }}>Sign message via connected Auro</button>
+        <button onClick={() => {
+          setAddr('B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn');
+          setSig({ r: '24756403745565155334343141240729212829194956404851084071603591710242651547325', s: '25284399962144351938259578951164638075292706477803146509961794774712565708371' });
+        }}>Test sign</button>
       </div>
     </div>
 
@@ -102,7 +140,7 @@ function SignedMessage(props: any) {
       <div>
         <label>
           Your new message:
-          <input name="field" value={sig.r} style={{ width: '100%' }} onChange={(e) => setSig({ r: e.target.value, s: sig.s })} />
+          <input name="field" value={newWallMsg} style={{ width: '100%' }} onChange={(e) => setWallMsg(e.target.value)} />
         </label>
       </div>
 
@@ -114,8 +152,24 @@ function SignedMessage(props: any) {
           console.log(res);
           setSig({ r: res.signature.field, s: res.signature.scalar });
           */
+          // createWallTransaction(leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, num: UInt32, wallMsg: Field) 
+
+          const leafIdx = new UInt32(0);
+          const whalePub = PublicKey.fromBase58(newAddr);
+          const Tree = new MerkleTree(8);
+          // gets a plain witness for leaf at index
+          // TypeError: this.value.toBigInt is not a function
+          // const wit = Tree.getWitness(leafIdx.toBigint()); // XXX search for pubkey for leafIdx
+          const wit = Tree.getWitness(BigInt(0n));
+          const path = new MyMerkleWitness(wit);
+          const sig = Signature.fromJSON({ r: newSig.r, s: newSig.s });
+          const num = new UInt32(123);
+          const wallMsg = Field(str2int(newWallMsg));
+
+          // const onSendWallTransaction = async (leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, num: UInt32, wallMsg: Field) 
+          props.onSendWallTransaction(leafIdx, whalePub, path, sig, num, wallMsg);
         }}>Write on wall</button>
-        <button onClick={() => props.onSendTransaction()} >click me</button>
+        <button onClick={() => props.onSendWallTransaction()} >click me</button>
       </div>
 
     </div>
@@ -251,6 +305,49 @@ export default function App({ Component, pageProps }: AppProps) {
         memo: '',
       },
     });
+    console.log(
+      'See transaction at https://berkeley.minaexplorer.com/transaction/' + hash
+    );
+
+    setState({ ...state, creatingTransaction: false });
+  }
+
+  
+  const onSendWallTransaction = async (leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, num: UInt32, wallMsg: Field) => {
+    setState({ ...state, creatingTransaction: true });
+    console.log(leafIdx, whalePub, path, sig, num, wallMsg);
+
+
+    const zkAppAddress = 'B62qpJ4WFdXbah1TMnctXq2Hmsv4mEgr16BZgTCkNLY6uLw4VcsjDPY';
+    // const tx = await (window as any).mina.transaction(() => {
+    //   // error - unhandledRejection: ReferenceError: Blob is not defined
+    //   //const ContractInstance = new WhaleCoiner(PublicKey.fromBase58(zkAppAddress));
+    //   //ContractInstance.wallAsWhale(leafIdx, whalePub, path, sig, num, wallMsg);
+    // });
+
+    //return;
+    console.log('sending a wall transaction...');
+
+    await state.zkappWorkerClient!.fetchAccount({ publicKey: state.publicKey! });
+
+    // createWallTransaction(leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, num: UInt32, wallMsg: Field) 
+    // args: { leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, num: UInt32, wallMsg: Field }
+    await state.zkappWorkerClient!.createWallTransaction(/*leafIdx,*/ whalePub, /*path,*/ sig, /*num,*/ wallMsg);
+
+    console.log('creating proof...');
+    await state.zkappWorkerClient!.proveWallTransaction();
+
+    console.log('getting Transaction JSON...');
+    const transactionJSON = await state.zkappWorkerClient!.getTransactionJSON()
+
+    console.log('requesting send transaction...');
+    const { hash } = await (window as any).mina.sendTransaction({
+      transaction: transactionJSON,
+      feePayer: {
+        fee: transactionFee,
+        memo: '',
+      },
+    });
 
     console.log(
       'See transaction at https://berkeley.minaexplorer.com/transaction/' + hash
@@ -335,7 +432,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <SignedMessage
         wallMsg={state.currentMsg}
         onRefreshCurrentMsg={onRefreshCurrentMsg}
-        onSendTransaction={(x: void) => console.log('sig ', x)}
+        onSendWallTransaction={onSendWallTransaction}
       />
     </main>
   </div >

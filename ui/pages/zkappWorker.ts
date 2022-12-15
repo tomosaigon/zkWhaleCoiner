@@ -4,14 +4,17 @@ import {
   PublicKey,
   PrivateKey,
   Field,
+  UInt32,
+  Signature,
   fetchAccount,
 } from 'snarkyjs'
+import { LedgerHash } from 'snarkyjs/dist/node/lib/encoding';
 
 type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
 
 // ---------------------------------------------------------------------------------------
 
-import type { WhaleCoiner } from '../../contracts/src/WhaleCoiner';
+import type { WhaleCoiner, MyMerkleWitness } from '../../contracts/src/WhaleCoiner';
 
 const state = {
   WhaleCoiner: null as null | typeof WhaleCoiner,
@@ -56,12 +59,25 @@ const functions = {
   },
   createUpdateTransaction: async (args: {}) => {
     const transaction = await Mina.transaction(() => {
-        state.zkapp!.update();
-      }
+      state.zkapp!.update(Field(100), PublicKey.fromBase58('B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn'));
+    }
     );
     state.transaction = transaction;
   },
   proveUpdateTransaction: async (args: {}) => {
+    await state.transaction!.prove();
+  },
+  
+  // wallAsWhale(leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature,  num: UInt32, wallMsg: Field) 
+  createWallTransaction: async (args: { /*leafIdx: UInt32,*/ whalePub: PublicKey, /*path: MyMerkleWitness,*/ sig: Signature, /*num: UInt32,*/ wallMsg: Field }) => {
+    const transaction = await Mina.transaction(() => {
+      console.log(args);
+      state.zkapp!.wallAsWhale(/*args.leafIdx,*/ args.whalePub, /*args.path,*/ args.sig, /*args.num,*/ args.wallMsg);
+    }
+    );
+    state.transaction = transaction;
+  },
+  proveWallTransaction: async (args: {}) => {
     await state.transaction!.prove();
   },
   getTransactionJSON: async (args: {}) => {
