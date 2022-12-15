@@ -11,11 +11,11 @@ type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
 
 // ---------------------------------------------------------------------------------------
 
-import type { Add } from '../../contracts/src/Add';
+import type { WhaleCoiner } from '../../contracts/src/WhaleCoiner';
 
 const state = {
-  Add: null as null | typeof Add,
-  zkapp: null as null | Add,
+  WhaleCoiner: null as null | typeof WhaleCoiner,
+  zkapp: null as null | WhaleCoiner,
   transaction: null as null | Transaction,
 }
 
@@ -32,11 +32,11 @@ const functions = {
     Mina.setActiveInstance(Berkeley);
   },
   loadContract: async (args: {}) => {
-    const { Add } = await import('../../contracts/build/src/Add.js');
-    state.Add = Add; // XXX cached??? 
+    const { WhaleCoiner } = await import('../../contracts/build/src/WhaleCoiner.js');
+    state.WhaleCoiner = WhaleCoiner;
   },
   compileContract: async (args: {}) => {
-    await state.Add!.compile();
+    await state.WhaleCoiner!.compile();
   },
   fetchAccount: async (args: { publicKey58: string }) => {
     const publicKey = PublicKey.fromBase58(args.publicKey58);
@@ -44,7 +44,7 @@ const functions = {
   },
   initZkappInstance: async (args: { publicKey58: string }) => {
     const publicKey = PublicKey.fromBase58(args.publicKey58);
-    state.zkapp = new state.Add!(publicKey);
+    state.zkapp = new state.WhaleCoiner!(publicKey);
   },
   getNum: async (args: {}) => {
     const currentNum = await state.zkapp!.num.get();

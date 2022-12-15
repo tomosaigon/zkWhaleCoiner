@@ -5,7 +5,7 @@ import '../styles/globals.css'
 import type { AppProps } from 'next/app'
 
 import './reactCOIServiceWorker';
-import whales from '../../whales.json';
+import whales from '../../contracts/whales.json';
 
 // copied from example
 import { useEffect, useState } from "react";
@@ -178,13 +178,8 @@ export default function App({ Component, pageProps }: AppProps) {
         await zkappWorkerClient.compileContract();
         console.log('zkApp compiled');
 
-        // https://berkeley.minaexplorer.com/wallet/B62qph2VodgSo5NKn9gZta5BHNxppgZMDUihf1g7mXreL4uPJFXDGDA/zkapp-transactions
-        // const zkappPublicKey = PublicKey.fromBase58('B62qph2VodgSo5NKn9gZta5BHNxppgZMDUihf1g7mXreL4uPJFXDGDA');
         // Berkeley Testnet B62qisn669bZqsh8yMWkNyCA7RvjrL6gfdr3TQxymDHNhTc97xE5kNV
-        const tomoAddFork = 'B62qmv5LdsuGNjbccmJPRVt4EV15KDUri6gMbGiWa5XRNthcpdzwHtF';
-        //const tomoAddFinal = 'B62qmv5LdsuGNjbccmJPRVt4EV15KDUri6gMbGiWa5XRNthcpdzwHtF'
-        //const zkAppAddress_orig = 'B62qisn669bZqsh8yMWkNyCA7RvjrL6gfdr3TQxymDHNhTc97xE5kNV';
-        const zkAppAddress = tomoAddFork;
+        const zkAppAddress = 'B62qpJ4WFdXbah1TMnctXq2Hmsv4mEgr16BZgTCkNLY6uLw4VcsjDPY';
         const zkappPublicKey = PublicKey.fromBase58(zkAppAddress);
 
         await zkappWorkerClient.initZkappInstance(zkappPublicKey);
