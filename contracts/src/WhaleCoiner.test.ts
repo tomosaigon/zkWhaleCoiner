@@ -90,13 +90,13 @@ describe('WhaleCoiner', () => {
 
     // update transaction
     const txn = await Mina.transaction(deployerAccount, () => {
-      zkApp.update();
+      zkApp.update(Field(3), /*UInt32.from(4),*/ zkAppAddress);
     });
     await txn.prove();
     await txn.send();
 
     const updatedNum = zkApp.num.get();
-    expect(updatedNum).toEqual(Field(3));
+    expect(updatedNum).toEqual(Field(4));
   });
 
   it('correctly proves witness', async () => {
@@ -165,11 +165,11 @@ describe('WhaleCoiner', () => {
       //zkApp.update();
       // TODO add msg sig proving you're tomo0
       zkApp.wallAsWhale(
-        UInt32.from(0n),
+        //UInt32.from(0n),
         tomoPub,
-        witness,
+        //witness,
         tomoSig,
-        UInt32.from(666),
+        //UInt32.from(666),
         Field(str2int('satoshi rulz')),
       );
 
@@ -177,9 +177,9 @@ describe('WhaleCoiner', () => {
     await txn.prove();
     await txn.send();
 
-    const updatedNum = zkApp.num.get();
-    const numOfBeast = 666;
-    expect(updatedNum).toEqual(Field(numOfBeast));
+    // const updatedNum = zkApp.num.get();
+    // const numOfBeast = 666;
+    // expect(updatedNum).toEqual(Field(numOfBeast));
 
     const updatedMsg = zkApp.msg.get();
     expect(updatedMsg).toEqual(Field(str2int('satoshi rulz')));

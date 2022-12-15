@@ -39,7 +39,7 @@ let initialCommitment: Field = Field(0);
 
 // const treeHeight = 8;
 // creates the corresponding MerkleWitness class that is circuit-compatible
-class MyMerkleWitness extends MerkleWitness(8) { }
+export class MyMerkleWitness extends MerkleWitness(8) { }
 
 
 
@@ -100,27 +100,30 @@ export class WhaleCoiner extends SmartContract {
     this.msg.set(Field(str2int('init')));
   }
 
-  @method update() {
+  @method update(newNum: Field, /*x32: UInt32,*/ pub: PublicKey) {
     const curNum = this.num.get();
     this.num.assertEquals(curNum); // precondition that links this.num.get() to the actual on-chain state
-    const newState = curNum.add(2);
+    //const newState = curNum.add(2);
+
+    const newState = newNum.add(1);//    Field(x32.toBigint()));
+    //pub.toFields(); // nop, maaybe can't eval prover
     this.num.set(newState);
   }
 
   // spray message on wall if you're whalish
-  @method wallAsWhale(leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature,  num: UInt32, wallMsg: Field) {
+  @method wallAsWhale(/*leafIdx: UInt32,*/ whalePub: PublicKey, /*path: MyMerkleWitness,*/ sig: Signature,  /*num: UInt32,*/ wallMsg: Field) {
     // we fetch the on-chain commitment (root)
     let commitment = this.commitment.get();
     this.commitment.assertEquals(commitment);
 
-    // we check that the account is within the committed Merkle Tree
-    const leafHash = Poseidon.hash(whalePub.toFields());
-    path.calculateRoot(leafHash).assertEquals(commitment);
+    // // we check that the account is within the committed Merkle Tree
+    // const leafHash = Poseidon.hash(whalePub.toFields());
+    // path.calculateRoot(leafHash).assertEquals(commitment);
 
     const msg = CircuitString.fromString('Satoshi is a WhaleCoiner').toFields();
     sig.verify(whalePub, msg).assertTrue();
 
-    this.num.set(Field(num.toFields()[0]));
+    //this.num.set(Field(num.toFields()[0]));
     this.msg.set(wallMsg); // str2int
   }
 
