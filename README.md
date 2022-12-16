@@ -32,6 +32,8 @@ https://berkeley.minaexplorer.com/wallet/B62qpJ4WFdXbah1TMnctXq2Hmsv4mEgr16BZgTC
 7. Click "Write on wall" and confirm transaction in Auro.
 8. Wait for the transaction to confirm and then click the "Refresh Wall" button to see the new global wall message.
 
+![WhaleCoiner UI signing](ui/public/whalecoiner-signing.png)
+
 #### Build and deploy the smart contract
 ```
 cd contracts
