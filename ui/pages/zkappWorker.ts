@@ -70,9 +70,12 @@ const functions = {
   },
   
   // wallAsWhale(leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature,  num: UInt32, wallMsg: Field) 
-  createWallTransaction: async (args: { wallMsg: Field }) => {
+  createWallTransaction: async (args: { root: Field, whalePubX: Field, whalePubIsOdd: Field, path: MyMerkleWitness, sig: Signature, wallMsg: Field }) => {
     const transaction = await Mina.transaction(() => {
       state.zkapp!.wallfromUI(args.wallMsg);
+      // createWallTransaction(root: Field, whalePubX: Field, whalePubIsOdd: Field, path: MyMerkleWitness, sig: Signature, wallMsg: Field)
+      // TypeError: path.calculateRoot is not a function
+      // state.zkapp!.wallAsWhale(args.root, PublicKey.fromFields([args.whalePubX, args.whalePubIsOdd]), args.path, args.sig, args.wallMsg);
     }
     );
     state.transaction = transaction;

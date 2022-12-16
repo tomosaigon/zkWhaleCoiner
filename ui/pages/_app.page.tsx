@@ -23,12 +23,27 @@ import {
   Poseidon,
 } from 'snarkyjs'
 import { sign } from 'crypto';
-import { WhaleCoiner } from '../../contracts/build/src';
+// import { WhaleCoiner } from '../../contracts/build/src';
 
-// XXX copy code here for now
-//import { MyMerkleWitness, str2int, int2str } from '../../contracts/src/WhaleCoiner';
+// XXX copy code here for now - Blob
+//import { MyMerkleWitness, whaleTree, str2int, int2str } from '../../contracts/build/src/WhaleCoiner.js';
+// console.log(str2int('test'));
 // You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
-class MyMerkleWitness extends MerkleWitness(8) { }
+const treeHeight = 8;
+// creates the corresponding MerkleWitness class that is circuit-compatible
+class MyMerkleWitness extends MerkleWitness(treeHeight) { }
+
+function whaleTree(): [MerkleTree, Field] {
+  const Tree = new MerkleTree(8);
+  let nextIdx = 0;
+  for (const [i, whale] of whales.entries()) {
+    if (whale.a.slice(0, 2) == 'B6') {
+      Tree.setLeaf(BigInt(nextIdx), Poseidon.hash(PublicKey.fromBase58(whale.a).toFields()));
+      nextIdx++;
+    }
+  }
+  return [Tree, Tree.getRoot()];
+}
 function str2int(str: string) {
   return BigInt('0x' + str.split('').map(char => char.charCodeAt(0).toString(16)).join(''));
 }
@@ -40,7 +55,6 @@ function int2str(n: bigint) {
   }
   return s;
 }
-
 
 
 let transactionFee = 0.1;
@@ -60,91 +74,66 @@ function SignedMessage(props: any) {
 
   return <div className={styles.container}>
 
-    <div className={styles.container} style={{ backgroundColor: 'yellow' }}>
-      <h2>This message currently appears on the sacred WhaleCoiners Wall:</h2>
-      <div className={styles.card}>
-        <h1><code>{props.wallMsg ? int2str(props.wallMsg.toBigInt()) : 'loading wall msg...'}</code></h1>
-        <span>your msg: {newWallMsg}</span>
-      </div>
-      <p>Only WhaleCoiners can write to this wall. We don't know who wrote on the wall,
-        only that they proved they were a WhaleCoiner. By the magic of zero knowledge proofs.</p>
-    </div>
-
-    <div className={styles.container} style={{ backgroundColor: 'violet' }}>
-      <h3>Check if an address is in the computed WhaleCoiners list which hashes to this Merkle tree root:</h3>
-      <div className={styles.code}>
-        11498032990274737164207907745577872827449729229431235048917552227435182651432
-      </div>
-      <p>List has been pre-computed and can be
-        verified here: <a href="https://nftstorage.link/ipfs/bafkreig6xuovd5lqxaalr4bx6bj6oeuufy77nngq2gq5ciciisp7ttmbay">ipfs://bafkreig6xuovd5lqxaalr4bx6bj6oeuufy77nngq2gq5ciciisp7ttmbay</a></p>
-      <div className={styles.card} style={{maxWidth:'100%'}}>
-        <input onChange={(e) => setQuery(e.target.value)} value={query} />
-        <button onClick={whaleSearch}>Search substring</button>
+    <div className={styles.container} style={{ backgroundColor: 'beige' }}>
+      <h1 className={styles.title}>WhaleCoiners Wall</h1>
+      <p>This message currently appears on the sacred WhaleCoiners Wall:</p>
+      <div className={styles.container} style={{}}>
+        <h1 style={{border:'8px solid black', backgroundColor:'white'}}><code>{props.wallMsg ? int2str(props.wallMsg.toBigInt()) : 'loading wall msg...'}</code></h1>
       
-        <h3>Search results</h3>
-        <div className={styles.code}>
-          <code>
-            {searchResults.join('\n')}
-          </code>
+        <button onClick={props.onRefreshCurrentMsg}> Refresh Wall </button>
+        <p>Only WhaleCoiners can write to this wall. We don't know who wrote on the wall,
+          only that they proved they were a WhaleCoiner. By the magic of zero knowledge proofs.</p>
+      </div>
+
+      <div className={styles.container} style={{ backgroundColor: 'cyan', width: '50%', display: 'inline-block', verticalAlign: 'top' }}>
+        <h2>Prove you're a Whale</h2>
+        <h4>Sign the following message:</h4>
+        <span>```</span>
+        <div className={styles.code}>Satoshi is a WhaleCoiner</div>
+        <span>```</span>
+        <p>Copy the message text above and sign it with your Bitcoin, Ethereum,
+          or Mina (depending on compatibility) wallet using an address/public key
+          listed in the WhaleCoiner database.
+        </p>
+      </div>
+
+      <div className={styles.container} style={{ backgroundColor: 'beige', width: '50%', display: 'inline-block', verticalAlign: 'top' }}>
+        <h2>Your Signature</h2>
+        <div>
+          <form>
+            <input id='addr' name="field" value={newAddr} style={{ width: '100%' }} onChange={(e) => setAddr(e.target.value)} />
+            <label htmlFor='addr'>Public Key (address):</label>
+          </form><form>
+            <input id='r' name="field" value={newSig.r} style={{ width: '100%' }} onChange={(e) => setSig({ r: e.target.value, s: newSig.s })} />
+            <label htmlFor='r'>Field (r)</label>
+          </form><form>
+            <input id='s' name="field" value={newSig.s} style={{ width: '100%' }} onChange={(e) => setSig({ r: newSig.r, s: e.target.value })} />
+            <label htmlFor='s'>Scalar (s)</label>
+          </form>
+        </div>
+        <div>
+          <button onClick={async () => {
+            const mina = (window as any).mina;
+            setAddr((await mina.requestAccounts())[0]);
+            let res = await mina.signMessage({ message: whaleMsg, });
+            console.log(res);
+            setSig({ r: res.signature.field, s: res.signature.scalar });
+          }}>Sign with Auro</button>
+          <button onClick={() => {
+            setAddr('B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn');
+            setSig({ r: '24756403745565155334343141240729212829194956404851084071603591710242651547325', s: '25284399962144351938259578951164638075292706477803146509961794774712565708371' });
+          }}>Test sign</button>
         </div>
       </div>
-    </div>
 
-    <div className={styles.container} style={{ backgroundColor: 'cyan' }}>
-      <h2>Prove you're a Whale by signing the following message</h2>
-      <span>```</span>
-      <div className={styles.code}>Satoshi is a WhaleCoiner</div>
-      <span>```</span>
-      <p>Copy the message text above and sign it with your Bitcoin, Ethereum,
-        or Mina (depending on compatibility) wallet using an address/public key
-        listed in the WhaleCoiner database.
-      </p>
-    </div>
-
-    <div className={styles.container} style={{ backgroundColor: 'beige' }}>
-      <h2>Your Signature</h2>
-      <div>
-        <label>
-          Public Key (address):
-          <input name="field" value={newAddr} style={{ width: '100%' }} onChange={(e) => setAddr(e.target.value)} />
-        </label>
-      </div>      <div>
-        <label>
-          field (r):
-          <input name="field" value={newSig.r} style={{ width: '100%' }} onChange={(e) => setSig({ r: e.target.value, s: newSig.s })} />
-        </label>
-      </div>
-      <div>
-        <label>
-          scalar (s):
-          <input name="scalar" value={newSig.s} style={{ width: '100%' }} onChange={(e) => setSig({ r: newSig.r, s: e.target.value })} />
-        </label>
-      </div>
-      <div className={styles.card}>
-        <button onClick={async () => {
-          const mina = (window as any).mina;
-          setAddr((await mina.requestAccounts())[0]);
-          let res = await mina.signMessage({ message: whaleMsg, });
-          console.log(res);
-          setSig({ r: res.signature.field, s: res.signature.scalar });
-        }}>Sign message via connected Auro</button>
-        <button onClick={() => {
-          setAddr('B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn');
-          setSig({ r: '24756403745565155334343141240729212829194956404851084071603591710242651547325', s: '25284399962144351938259578951164638075292706477803146509961794774712565708371' });
-        }}>Test sign</button>
-      </div>
-    </div>
-
-    <div className={styles.container} style={{ backgroundColor: 'gold' }}>
-      <h2>Write your message on the wall</h2>
-      <div>
-        <label>
-          Your new message:
-          <input name="field" value={newWallMsg} style={{ width: '100%' }} onChange={(e) => setWallMsg(e.target.value)} />
-        </label>
-      </div>
-
-      <div className={styles.card}>
+      <div className={styles.container} style={{ backgroundColor: 'beige' }}>
+        <h2>Write your message on the wall</h2>
+        <div>
+          <form>
+            <input id='wallMsg' name="field" value={newWallMsg} style={{ width: '100%' }} onChange={(e) => setWallMsg(e.target.value)} />
+            <label htmlFor='wallMsg'>Your desired message</label>
+          </form>
+        </div>
         <button onClick={async () => {
           /*
           const mina = (window as any).mina;
@@ -157,15 +146,9 @@ function SignedMessage(props: any) {
           const leafIdx = new UInt32(0);
           const whalePub = PublicKey.fromBase58(newAddr);
           console.log(whalePub);
-          const [whalePubX, whalePubIsOdd] = whalePub.toFields(); 
-          const Tree = new MerkleTree(8);
-          let nextIdx = 0;
-          for (const [i, whale] of whales.entries()) {
-            if (whale.a.slice(0, 2) == 'B6') {
-              Tree.setLeaf(BigInt(nextIdx), Poseidon.hash(PublicKey.fromBase58(whale.a).toFields()));
-              nextIdx++;
-            }
-          }
+          const [whalePubX, whalePubIsOdd] = whalePub.toFields();
+          const [Tree, initialCommitment] = whaleTree();
+          console.log(Tree, initialCommitment);
           // gets a plain witness for leaf at index
           // TypeError: this.value.toBigInt is not a function
           // const wit = Tree.getWitness(leafIdx.toBigint()); // XXX search for pubkey for leafIdx
@@ -175,12 +158,34 @@ function SignedMessage(props: any) {
           const num = new UInt32(123);
           const wallMsg = Field(str2int(newWallMsg));
 
+          // @method wallAsWhale(rootCopy: Field, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, wallMsg: Field) {
           // const onSendWallTransaction = async (leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, num: UInt32, wallMsg: Field) 
-          props.onSendWallTransaction(leafIdx, whalePubX, whalePubIsOdd, path, sig, num, wallMsg);
-        }}>Write on wall</button>
-        <button onClick={() => props.onSendWallTransaction()} >click me</button>
+          props.onSendWallTransaction(initialCommitment, whalePubX, whalePubIsOdd, path, sig, wallMsg);
+        }} disabled={props.creatingTransaction}>Write on wall</button>
       </div>
 
+      <div className={styles.container} style={{ backgroundColor: 'darkgray', clear: 'both' }}>
+        <h3>Check if an address is in the computed WhaleCoiners list which hashes to this Merkle tree root:</h3>
+        <div className={styles.code}>
+          11498032990274737164207907745577872827449729229431235048917552227435182651432
+        </div>
+        <p>List has been pre-computed and can be
+          verified here: <a href="https://nftstorage.link/ipfs/bafkreig6xuovd5lqxaalr4bx6bj6oeuufy77nngq2gq5ciciisp7ttmbay">ipfs://bafkreig6xuovd5lqxaalr4bx6bj6oeuufy77nngq2gq5ciciisp7ttmbay</a></p>
+        <div>
+          <form onSubmit={e  => { e.preventDefault(); whaleSearch(); }}>
+            <input id='search' onChange={(e) => setQuery(e.target.value)} value={query} />
+            <label htmlFor='search'>Search for this string</label>
+          </form>
+          <button onClick={whaleSearch}>Search substring</button>
+
+          <h3>Search results</h3>
+          <div className={styles.code}>
+            <code>
+              {searchResults.join('\n')}
+            </code>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -321,10 +326,10 @@ export default function App({ Component, pageProps }: AppProps) {
     setState({ ...state, creatingTransaction: false });
   }
 
-  
-  const onSendWallTransaction = async (leafIdx: UInt32, whalePubX: Field, whalePubIsOdd: Field, path: MyMerkleWitness, sig: Signature, num: UInt32, wallMsg: Field) => {
+
+  const onSendWallTransaction = async (root: Field, whalePubX: Field, whalePubIsOdd: Field, path: MyMerkleWitness, sig: Signature, wallMsg: Field) => {
     setState({ ...state, creatingTransaction: true });
-    console.log(leafIdx, whalePubX, whalePubIsOdd, path, sig, num, wallMsg);
+    console.log(root, whalePubX, whalePubIsOdd, path, sig, wallMsg);
 
 
     const zkAppAddress = 'B62qpJ4WFdXbah1TMnctXq2Hmsv4mEgr16BZgTCkNLY6uLw4VcsjDPY';
@@ -341,7 +346,10 @@ export default function App({ Component, pageProps }: AppProps) {
 
     // createWallTransaction(leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, num: UInt32, wallMsg: Field) 
     // args: { leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, num: UInt32, wallMsg: Field }
-    await state.zkappWorkerClient!.createWallTransaction(wallMsg);
+    //createWallTransaction(root, whalePub, path, sig, wallMsg) 
+
+    // await state.zkappWorkerClient!.createWallTransaction(wallMsg);
+    await state.zkappWorkerClient!.createWallTransaction(root, whalePubX, whalePubIsOdd, path, sig, wallMsg);
 
     console.log('creating proof...');
     await state.zkappWorkerClient!.proveWallTransaction();
@@ -411,9 +419,9 @@ export default function App({ Component, pageProps }: AppProps) {
   let mainContent;
   const whaleMsg = 'Satoshi is a WhaleCoiner';
   if (state.hasBeenSetup && state.accountExists) {
-    mainContent = <div>
-      <button onClick={onSendTransaction} disabled={state.creatingTransaction}> Send Transaction </button>
-      <div> Current Number in zkApp: {state.currentNum!.toString()} </div>
+    mainContent = <div style={{opacity: 0.2}}>
+      <button onClick={onSendTransaction} disabled={state.creatingTransaction}> Send Test Transaction </button>
+      <div> Current commitment in zkApp: {state.currentNum!.toString()} </div>
       <button onClick={onRefreshCurrentNum}> Get Latest State </button>
       <div> Current msg in zkApp: {state.currentMsg!.toString()} </div>
       <button onClick={onRefreshCurrentMsg}> Get Latest State </button>
@@ -437,12 +445,13 @@ export default function App({ Component, pageProps }: AppProps) {
       </h1>
       {setup}
       {accountDoesNotExist}
-      {mainContent}
       <SignedMessage
         wallMsg={state.currentMsg}
         onRefreshCurrentMsg={onRefreshCurrentMsg}
         onSendWallTransaction={onSendWallTransaction}
+        creatingTransaction={state.creatingTransaction}
       />
+      {mainContent}
     </main>
   </div >
 

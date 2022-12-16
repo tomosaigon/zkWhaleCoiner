@@ -57,53 +57,54 @@ export default class ZkappWorkerClient {
     return this._call('proveUpdateTransaction', {});
   }
 
-  createWallTransaction(wallMsg: Field) {
+  //createWallTransaction(wallMsg: Field) {
+  createWallTransaction(root: Field, whalePubX: Field, whalePubIsOdd: Field, path: MyMerkleWitness, sig: Signature, wallMsg: Field) {
     // createWallTransaction: async (args: { leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, num: UInt32, wallMsg: Field }) 
-    return this._call('createWallTransaction', {wallMsg:wallMsg});
+    return this._call('createWallTransaction', { root, whalePubX, whalePubIsOdd, path, sig, wallMsg });
   }
 
-  proveWallTransaction() {
-    return this._call('proveWallTransaction', {});
-  }
+proveWallTransaction() {
+  return this._call('proveWallTransaction', {});
+}
 
   async getTransactionJSON() {
-    const result = await this._call('getTransactionJSON', {});
-    return result;
-  }
+  const result = await this._call('getTransactionJSON', {});
+  return result;
+}
 
-  // ---------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------
 
-  worker: Worker;
+worker: Worker;
 
-  promises: { [id: number]: { resolve: (res: any) => void, reject: (err: any) => void } };
+promises: { [id: number]: { resolve: (res: any) => void, reject: (err: any) => void } };
 
-  nextId: number;
+nextId: number;
 
-  constructor() {
-    this.worker = new Worker(new URL('./zkappWorker.ts', import.meta.url))
-    this.promises = {};
-    this.nextId = 0;
+constructor() {
+  this.worker = new Worker(new URL('./zkappWorker.ts', import.meta.url))
+  this.promises = {};
+  this.nextId = 0;
 
-    this.worker.onmessage = (event: MessageEvent<ZkappWorkerReponse>) => {
-      this.promises[event.data.id].resolve(event.data.data);
-      delete this.promises[event.data.id];
+  this.worker.onmessage = (event: MessageEvent<ZkappWorkerReponse>) => {
+    this.promises[event.data.id].resolve(event.data.data);
+    delete this.promises[event.data.id];
+  };
+}
+
+_call(fn: WorkerFunctions, args: any) {
+  return new Promise((resolve, reject) => {
+    this.promises[this.nextId] = { resolve, reject }
+
+    const message: ZkappWorkerRequest = {
+      id: this.nextId,
+      fn,
+      args,
     };
-  }
 
-  _call(fn: WorkerFunctions, args: any) {
-    return new Promise((resolve, reject) => {
-      this.promises[this.nextId] = { resolve, reject }
+    this.worker.postMessage(message);
 
-      const message: ZkappWorkerRequest = {
-        id: this.nextId,
-        fn,
-        args,
-      };
-
-      this.worker.postMessage(message);
-
-      this.nextId++;
-    });
-  }
+    this.nextId++;
+  });
+}
 }
 
