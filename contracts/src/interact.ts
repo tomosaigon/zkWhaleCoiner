@@ -106,8 +106,17 @@ let tx = await Mina.transaction({ feePayerKey: zkAppKey, fee: 0.1e9 }, () => {
 
   const tomoPub58 = 'B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn';
   const whalePub = PublicKey.fromBase58(tomoPub58);
-  // zkApp.wallAsWhale(whalePub, witness, sig, wallMsg);
+  
+  // Error: ("Error: assert_equal: 25321076411253627146932089654484565121081622867262989611537313761204357221798 != 0")
+  // 1. try disable sig verify - same error
+  // 2. try disable calc root - that worked
+  //zkApp.wallAsWhale(whalePub, witness, sig, wallMsg);
+  
+
+  // works
   zkApp.wallfromUI(wallMsg);
+  
+  
   // zkApp.wallfromUI(whalePub.toFields()[0], whalePub.toFields()[1], 
   //   Field(BigInt("24756403745565155334343141240729212829194956404851084071603591710242651547325")),
   //   Scalar.fromJSON("25284399962144351938259578951164638075292706477803146509961794774712565708371"),

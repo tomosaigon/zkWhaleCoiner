@@ -35,25 +35,37 @@ const whales = [
 await isReady; // before new Field
 
 // we need the initiate tree root in order to tell the contract about our off-chain storage
-let initialCommitment: Field = Field(0);
+//let initialCommitment: Field = Field(0);
 
 
 // const treeHeight = 8;
 // creates the corresponding MerkleWitness class that is circuit-compatible
 export class MyMerkleWitness extends MerkleWitness(8) { }
 
-
-
-const Tree = new MerkleTree(8);
-
-for (const [i, whale] of whales.entries()) {
-  if (whale.a.slice(0, 2) == 'B6') {
-    Tree.setLeaf(BigInt(i), Poseidon.hash(PublicKey.fromBase58(whale.a).toFields()));
+export function whaleTree(): [MerkleTree, Field] {
+  const Tree = new MerkleTree(8);
+  let nextIdx = 0;
+  for (const [i, whale] of whales.entries()) {
+    if (whale.a.slice(0, 2) == 'B6') {
+      Tree.setLeaf(BigInt(nextIdx), Poseidon.hash(PublicKey.fromBase58(whale.a).toFields()));
+      nextIdx++;
+    }
   }
+  return [Tree, Tree.getRoot()];
 }
 
-// now that we got our accounts set up, we need the commitment to deploy our contract!
-initialCommitment = Tree.getRoot();
+const [_, initialCommitment] = whaleTree();// = Tree.getRoot();
+console.log('init commit: ', initialCommitment);
+// 25321076411253627146932089654484565121081622867262989611537313761204357221798
+console.log(initialCommitment.toJSON());
+let staticRoot = Field(BigInt('25321076411253627146932089654484565121081622867262989611537313761204357221798'));
+let staticRoot_ = Field(BigInt('25321076411253627146932089654484565121081622867262989611537313761204357221798'));
+console.log('F|why != ? ', initialCommitment == staticRoot);
+console.log('T|.equals: ', staticRoot.equals(initialCommitment).toBoolean());
+console.log('F|identity? ', staticRoot_ == staticRoot);
+console.log('T|strcmp: ', initialCommitment.toString() == staticRoot.toString());
+console.log('staticRoot: ', staticRoot, staticRoot.toJSON());
+
 
 export function str2int(str: string) {
   return BigInt('0x' + str.split('').map(char => char.charCodeAt(0).toString(16)).join(''));
@@ -142,12 +154,12 @@ export class WhaleCoiner extends SmartContract {
     const rootBefore = leafWitness.calculateRoot(numberBefore);
     rootBefore.assertEquals(initialRoot);
     */
-   
-    // const msg = CircuitString.fromString('Satoshi is a WhaleCoiner').toFields();
+
+    const msg = CircuitString.fromString('Satoshi is a WhaleCoiner').toFields();
 
     // const sig = new Signature(r, s);
     // this fails on assertTrue: const sig = Signature.fromFields([r, s]);
-      // also fails on assert: const sig = Signature.fromFields([s, r]);
+    // also fails on assert: const sig = Signature.fromFields([s, r]);
     // //    Field(BigInt("11149866380985503299463982621713898158386384905365504586658985081080436971813")),
     // //    Field(BigInt("27805392407476107597780241785910086576642409128638979382253461373350709924352"))
     // // );
@@ -171,7 +183,7 @@ export class WhaleCoiner extends SmartContract {
     // passed in PublicKey object from UI missing .toGroup.
     // base58 string not provable. try field[]. array not provable either.
     // const whalePub = PublicKey.fromFields([whalePubIsOdd, whalePubX]); // reversed
-    
+
 
     // const sig = new Signature(
     //   r,//Field(BigInt("24756403745565155334343141240729212829194956404851084071603591710242651547325")),

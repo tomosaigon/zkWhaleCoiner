@@ -159,6 +159,13 @@ function SignedMessage(props: any) {
           console.log(whalePub);
           const [whalePubX, whalePubIsOdd] = whalePub.toFields(); 
           const Tree = new MerkleTree(8);
+          let nextIdx = 0;
+          for (const [i, whale] of whales.entries()) {
+            if (whale.a.slice(0, 2) == 'B6') {
+              Tree.setLeaf(BigInt(nextIdx), Poseidon.hash(PublicKey.fromBase58(whale.a).toFields()));
+              nextIdx++;
+            }
+          }
           // gets a plain witness for leaf at index
           // TypeError: this.value.toBigInt is not a function
           // const wit = Tree.getWitness(leafIdx.toBigint()); // XXX search for pubkey for leafIdx
