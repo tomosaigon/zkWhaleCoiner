@@ -136,6 +136,7 @@ export class WhaleCoiner extends SmartContract {
 
     // Error: ("Error: assert_equal: 0 != 25321076411253627146932089654484565121081622867262989611537313761204357221798")
     // commitment.assertEquals(rootCopy);
+    this.commitment.assertEquals(rootCopy);
     // XXX it's as if commitment is 0 here
 
     // // we check that the account is within the committed Merkle Tree
