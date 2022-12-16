@@ -72,7 +72,7 @@ describe('WhaleCoiner', () => {
   });
 
   it('correctly updates the num state on the `WhaleCoiner` smart contract', async () => {
-    return;
+    //return;
     await localDeploy();
 
     // update transaction
@@ -87,7 +87,7 @@ describe('WhaleCoiner', () => {
   });
 
   it('root calculates', async () => {
-    return;
+    //return;
     await localDeploy();
 
     expect(zkApp.num.get()).toEqual(Field(1));

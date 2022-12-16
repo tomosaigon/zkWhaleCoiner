@@ -34,13 +34,9 @@ const whales = [
 
 await isReady; // before new Field
 
-// we need the initiate tree root in order to tell the contract about our off-chain storage
-//let initialCommitment: Field = Field(0);
-
-
-// const treeHeight = 8;
+export const treeHeight = 8;
 // creates the corresponding MerkleWitness class that is circuit-compatible
-export class MyMerkleWitness extends MerkleWitness(8) { }
+export class MyMerkleWitness extends MerkleWitness(treeHeight) { }
 
 export function whaleTree(): [MerkleTree, Field] {
   const Tree = new MerkleTree(8);
@@ -55,17 +51,6 @@ export function whaleTree(): [MerkleTree, Field] {
 }
 
 const [_, initialCommitment] = whaleTree();// = Tree.getRoot();
-console.log('init commit: ', initialCommitment);
-// 25321076411253627146932089654484565121081622867262989611537313761204357221798
-console.log(initialCommitment.toJSON());
-let staticRoot = Field(BigInt('25321076411253627146932089654484565121081622867262989611537313761204357221798'));
-let staticRoot_ = Field(BigInt('25321076411253627146932089654484565121081622867262989611537313761204357221798'));
-console.log('F|why != ? ', initialCommitment == staticRoot);
-console.log('T|.equals: ', staticRoot.equals(initialCommitment).toBoolean());
-console.log('F|identity? ', staticRoot_ == staticRoot);
-console.log('T|strcmp: ', initialCommitment.toString() == staticRoot.toString());
-console.log('staticRoot: ', staticRoot, staticRoot.toJSON());
-
 
 export function str2int(str: string) {
   return BigInt('0x' + str.split('').map(char => char.charCodeAt(0).toString(16)).join(''));
@@ -98,7 +83,6 @@ export class WhaleCoiner extends SmartContract {
     super.init();
   }
 
-  // copied from LeaderBoard - remove args
   deploy(args: DeployArgs) {
     super.deploy(args);
     this.setPermissions({
@@ -122,7 +106,7 @@ export class WhaleCoiner extends SmartContract {
 
   @method recommit(root: Field) {
     const curRoot = this.commitment.get();
-    this.commitment.assertEquals(curRoot); // precondition that links this.num.get() to the actual on-chain state
+    this.commitment.assertEquals(curRoot);
     this.commitment.set(root);
   }
 
@@ -131,7 +115,7 @@ export class WhaleCoiner extends SmartContract {
   // spray message on wall if you're whalish
   @method wallAsWhale(rootCopy: Field, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, wallMsg: Field) {
     // we fetch the on-chain commitment (root)
-    const commitment = this.commitment.get(); // TODO not let?
+    const commitment = this.commitment.get();
     this.commitment.assertEquals(commitment);
 
     // Error: ("Error: assert_equal: 0 != 25321076411253627146932089654484565121081622867262989611537313761204357221798")
@@ -140,13 +124,7 @@ export class WhaleCoiner extends SmartContract {
     this.commitment.assertEquals(rootCopy);
 
     // // we check that the account is within the committed Merkle Tree
-    //maybe can't handle .toFields on pubkey?
     const leafHash = Poseidon.hash(whalePub.toFields());
-    // const leafHash = Poseidon.hash([
-    //   Field(BigInt('24477892193998808799000634066449762880814816646318045663180199870979367583489')),
-    //   Field(1)
-    // ]);
-
     path.calculateRoot(leafHash).assertEquals(rootCopy /*commitment*/);
 
     const msg = CircuitString.fromString('Satoshi is a WhaleCoiner').toFields();
@@ -165,12 +143,6 @@ export class WhaleCoiner extends SmartContract {
     // // we check that the account is within the committed Merkle Tree
     // const leafHash = Poseidon.hash(whalePub.toFields());
     // path.calculateRoot(leafHash).assertEquals(commitment);
-
-    /* maybe  try
-    // check the initial state matches what we expect
-    const rootBefore = leafWitness.calculateRoot(numberBefore);
-    rootBefore.assertEquals(initialRoot);
-    */
 
     const msg = CircuitString.fromString('Satoshi is a WhaleCoiner').toFields();
 
