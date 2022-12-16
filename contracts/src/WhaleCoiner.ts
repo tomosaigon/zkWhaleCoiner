@@ -101,33 +101,24 @@ export class WhaleCoiner extends SmartContract {
     this.msg.set(Field(str2int('init')));
   }
 
-  @method update(newNum: Field, /*x32: UInt32,*/ pub: PublicKey) {
+  @method update(newNum: Field) {
     const curNum = this.num.get();
     this.num.assertEquals(curNum); // precondition that links this.num.get() to the actual on-chain state
-    //const newState = curNum.add(2);
-
-    const newState = newNum.add(1);//    Field(x32.toBigint()));
-    //pub.toFields(); // nop, maaybe can't eval prover
+    const newState = newNum.add(1);
     this.num.set(newState);
   }
 
   // Keep in mind that all functions used inside your smart contract must operate on SnarkyJS compatible data types (e.g. Fields and other types built on top of Fields).
 
   // spray message on wall if you're whalish
-  @method wallAsWhale(/*leafIdx: UInt32,*/ whalePub: PublicKey, /*path: MyMerkleWitness,*/ sig: Signature,  /*num: UInt32,*/ wallMsg: Field) {
+  @method wallAsWhale(whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, wallMsg: Field) {
     // we fetch the on-chain commitment (root)
     let commitment = this.commitment.get();
     this.commitment.assertEquals(commitment);
 
     // // we check that the account is within the committed Merkle Tree
-    // const leafHash = Poseidon.hash(whalePub.toFields());
-    // path.calculateRoot(leafHash).assertEquals(commitment);
-
-    /* maybe  try
-    // check the initial state matches what we expect
-    const rootBefore = leafWitness.calculateRoot(numberBefore);
-    rootBefore.assertEquals(initialRoot);
-    */
+    const leafHash = Poseidon.hash(whalePub.toFields());
+    path.calculateRoot(leafHash).assertEquals(commitment);
 
     const msg = CircuitString.fromString('Satoshi is a WhaleCoiner').toFields();
 
@@ -137,7 +128,7 @@ export class WhaleCoiner extends SmartContract {
     this.msg.set(wallMsg); // str2int
   }
 
-  @method wallfromUI(/*leafIdx: UInt32,*/ whalePubIsOdd: Field, whalePubX: Field,/*PublicKey,*/ /*path: MyMerkleWitness,*/ /*sig: Signature,*/ r: Field, s: Scalar, /*num: UInt32,*/ wallMsg: Field) {
+  @method wallfromUI(wallMsg: Field) {
     // we fetch the on-chain commitment (root)
     let commitment = this.commitment.get();
     this.commitment.assertEquals(commitment);
@@ -152,7 +143,7 @@ export class WhaleCoiner extends SmartContract {
     rootBefore.assertEquals(initialRoot);
     */
    
-    const msg = CircuitString.fromString('Satoshi is a WhaleCoiner').toFields();
+    // const msg = CircuitString.fromString('Satoshi is a WhaleCoiner').toFields();
 
     // const sig = new Signature(r, s);
     // this fails on assertTrue: const sig = Signature.fromFields([r, s]);
@@ -179,14 +170,14 @@ export class WhaleCoiner extends SmartContract {
 
     // passed in PublicKey object from UI missing .toGroup.
     // base58 string not provable. try field[]. array not provable either.
-    const whalePub = PublicKey.fromFields([whalePubIsOdd, whalePubX]);
+    // const whalePub = PublicKey.fromFields([whalePubIsOdd, whalePubX]); // reversed
     
 
-    const sig = new Signature(
-      r,//Field(BigInt("24756403745565155334343141240729212829194956404851084071603591710242651547325")),
-      s,//Scalar.fromJSON("25284399962144351938259578951164638075292706477803146509961794774712565708371")
-    );
-    sig.verify(whalePub, msg).assertTrue();
+    // const sig = new Signature(
+    //   r,//Field(BigInt("24756403745565155334343141240729212829194956404851084071603591710242651547325")),
+    //   s,//Scalar.fromJSON("25284399962144351938259578951164638075292706477803146509961794774712565708371")
+    // );
+    // sig.verify(whalePub, msg).assertTrue();
 
     //this.num.set(Field(num.toFields()[0]));
     this.msg.set(wallMsg); // str2int

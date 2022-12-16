@@ -91,7 +91,7 @@ describe('WhaleCoiner', () => {
 
     // update transaction
     const txn = await Mina.transaction(deployerAccount, () => {
-      zkApp.update(Field(3), /*UInt32.from(4),*/ zkAppAddress);
+      zkApp.update(Field(3));
     });
     await txn.prove();
     await txn.send();
@@ -114,16 +114,10 @@ describe('WhaleCoiner', () => {
         Tree.setLeaf(BigInt(i), Poseidon.hash(PublicKey.fromBase58(whale.a).toFields()));
       }
     }
-
-    // gets the current root of the tree
     const root = Tree.getRoot();
 
-    // DOH fromString only looks at 1st char
-    //const msg = [Character.fromString('Satoshi is a WhaleCoiner').toField()];
     const msg = CircuitString.fromString('Satoshi is a WhaleCoiner').toFields();
-    console.log('msg: ',
-      msg.toString().split(',').map(c => parseInt(c)).filter(c => c).map(c => String.fromCharCode(c)).join('')
-    );
+    console.log('msg: ', msg.toString().split(',').map(c => parseInt(c)).filter(c => c).map(c => String.fromCharCode(c)).join(''));
 
     const tomoPub58 = 'B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn';
     let tomoPub = PublicKey.fromBase58(tomoPub58);
@@ -134,10 +128,6 @@ describe('WhaleCoiner', () => {
     })
     //tomoPub = fooKey.toPublicKey();
 
-    const constructSig = new Signature(
-      Field(BigInt("24756403745565155334343141240729212829194956404851084071603591710242651547325")),
-      Field(BigInt("25284399962144351938259578951164638075292706477803146509961794774712565708371"))
-    );
     const fromFieldsSig = Signature.fromFields([
       Field(BigInt("24756403745565155334343141240729212829194956404851084071603591710242651547325")),
       Field(BigInt("25284399962144351938259578951164638075292706477803146509961794774712565708371"))
@@ -146,10 +136,8 @@ describe('WhaleCoiner', () => {
       Field(BigInt("24756403745565155334343141240729212829194956404851084071603591710242651547325")),
       Scalar.fromJSON("25284399962144351938259578951164638075292706477803146509961794774712565708371")
     );
-    // these look the same but aren't
-    console.log(fooSig1.toJSON());
-    console.log(constructSig2.toJSON()); // <- seems to work
-    // console.log(constructSig.toJSON()); <- verify in contract throws an array with comparison failed
+    // console.log(fooSig1.toJSON());
+    // console.log(constructSig2.toJSON()); // <- seems to work
     // console.log(fromFieldsSig.toJSON()); <- Error: assert_equal: 0 != 1
 
     const tomoSigAuro = Signature.fromJSON({
@@ -166,18 +154,13 @@ describe('WhaleCoiner', () => {
     };
     //const tomoSig = Signature.fromJSON({ r: tomoNpmMinaSignerOut.field, s: tomoNpmMinaSignerOut.scalar });
     const tomoSig = fooSig1;
-    console.log(tomoSig.toFields().length);
-    console.log(tomoSig.toFields()[0].toString());
-    console.log('scalar s: ', tomoSig.s.toJSON(), tomoSig.s.toFields().length);
-    //const tomoSig = constructSig;
-
-    // try {
-    //   const tomoChecked = tomoSig.verify(tomoPub, msg);
-    //   console.log('verify sig: ', tomoChecked.toBoolean(), " - ", tomoChecked.toString());
-    //   expect(tomoChecked.toBoolean()).toBeTruthy();
-    // } catch (e) {
-    //   console.log("sig verify excepted: ", e);
-    // }
+    try {
+      const tomoChecked = tomoSig.verify(tomoPub, msg);
+      console.log('verify sig: ', tomoChecked.toBoolean(), " - ", tomoChecked.toString());
+      expect(tomoChecked.toBoolean()).toBeTruthy();
+    } catch (e) {
+      console.log("sig verify excepted: ", e);
+    }
 
     // gets a plain witness for leaf at index
     const wit = Tree.getWitness(0n); // XXX search for pubkey
@@ -186,51 +169,37 @@ describe('WhaleCoiner', () => {
 
 
     // call contract
+    const asWhale = true;
     const asUI = true;
     let txn;
-    if (!asUI) {
+    if (asWhale) {
       txn = await Mina.transaction(deployerAccount, () => {
-        //zkApp.update();
-        // TODO add msg sig proving you're tomo0
         zkApp.wallAsWhale(
-          //UInt32.from(0n),
           tomoPub,
-          //witness,
+          witness,
           constructSig2, //fooSig1, //broken(fromFieldsSig,//constructSig),//tomoSig,
-          //UInt32.from(666),
           Field(str2int('satoshi rulz')),
         );
       });
-    } else {
-      txn = await Mina.transaction(deployerAccount, () => {
-        //zkApp.update();
-        // TODO add msg sig proving you're tomo0
-        zkApp.wallfromUI(
-          //UInt32.from(0n),
-          tomoPub.toFields()[0], tomoPub.toFields()[1],
-          //witness,
-          //tomoSig,
-          Field(BigInt("24756403745565155334343141240729212829194956404851084071603591710242651547325")),
-          Scalar.fromJSON("25284399962144351938259578951164638075292706477803146509961794774712565708371"),
-          //UInt32.from(666),
-          Field(str2int('satoshi rulz')),
-        );
-      });
+      await txn.prove();
+      await txn.send();
+  
+      const updatedMsg = zkApp.msg.get();
+      console.log(int2str(updatedMsg.toBigInt()));
+      expect(updatedMsg).toEqual(Field(str2int('satoshi rulz')));
     }
-    await txn.prove();
-    await txn.send();
-
-    // const updatedNum = zkApp.num.get();
-    // const numOfBeast = 666;
-    // expect(updatedNum).toEqual(Field(numOfBeast));
-
-    const updatedMsg = zkApp.msg.get();
-    console.log(int2str(updatedMsg.toBigInt()));
-    expect(updatedMsg).toEqual(Field(str2int('satoshi rulz')));
-
-
+    if (asUI) {
+      txn = await Mina.transaction(deployerAccount, () => {
+        zkApp.wallfromUI(
+          Field(str2int('satoshi still rulz')),
+        );
+      });
+      await txn.prove();
+      await txn.send();
+  
+      const updatedMsg = zkApp.msg.get();
+      console.log(int2str(updatedMsg.toBigInt()));
+      expect(updatedMsg).toEqual(Field(str2int('satoshi still rulz')));
+    }
   });
-
-
-
 });

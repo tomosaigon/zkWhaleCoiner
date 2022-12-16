@@ -106,10 +106,12 @@ let tx = await Mina.transaction({ feePayerKey: zkAppKey, fee: 0.1e9 }, () => {
 
   const tomoPub58 = 'B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn';
   const whalePub = PublicKey.fromBase58(tomoPub58);
-  zkApp.wallfromUI(whalePub.toFields()[0], whalePub.toFields()[1], 
-    Field(BigInt("24756403745565155334343141240729212829194956404851084071603591710242651547325")),
-    Scalar.fromJSON("25284399962144351938259578951164638075292706477803146509961794774712565708371"),
-    wallMsg);
+  // zkApp.wallAsWhale(whalePub, witness, sig, wallMsg);
+  zkApp.wallfromUI(wallMsg);
+  // zkApp.wallfromUI(whalePub.toFields()[0], whalePub.toFields()[1], 
+  //   Field(BigInt("24756403745565155334343141240729212829194956404851084071603591710242651547325")),
+  //   Scalar.fromJSON("25284399962144351938259578951164638075292706477803146509961794774712565708371"),
+  //   wallMsg);
   // Account_app_state_0_precondition_unsatisfied - with zk app addy https://berkeley.minaexplorer.com/transaction/CkpZwLGpLnajgfnaMT7PJeyWcqqggMnMmoYArbiaqr5miEXK1aomx
   //zkApp.wallAsWhale(PublicKey.fromBase58('B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn'), witness, sig, wallMsg);
 });

@@ -334,7 +334,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
     // createWallTransaction(leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, num: UInt32, wallMsg: Field) 
     // args: { leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, num: UInt32, wallMsg: Field }
-    await state.zkappWorkerClient!.createWallTransaction(/*leafIdx,*/ whalePubX, whalePubIsOdd, /*path,*/ sig, /*num,*/ wallMsg);
+    await state.zkappWorkerClient!.createWallTransaction(wallMsg);
 
     console.log('creating proof...');
     await state.zkappWorkerClient!.proveWallTransaction();
