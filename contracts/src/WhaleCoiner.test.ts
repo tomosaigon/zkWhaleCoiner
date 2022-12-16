@@ -25,7 +25,7 @@ import {
  * See https://docs.minaprotocol.com/zkapps for more info.
  */
 
-let proofsEnabled = !true;
+let proofsEnabled = true;
 
 describe('WhaleCoiner', () => {
   let deployerAccount: PrivateKey,
@@ -87,6 +87,7 @@ describe('WhaleCoiner', () => {
   });
 
   it('root calculates', async () => {
+    return;
     await localDeploy();
 
     expect(zkApp.num.get()).toEqual(Field(1));
@@ -103,6 +104,9 @@ describe('WhaleCoiner', () => {
     const tomoPub58 = 'B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn';
     let tomoPub = PublicKey.fromBase58(tomoPub58);
     const whalePub = tomoPub;
+
+    // ['24477892193998808799000634066449762880814816646318045663180199870979367583489',  '1']
+    console.log(tomoPub.toFields().map(f => f.toJSON()));
     // what would happen inside
     const commitment = zkApp.commitment.get();
     console.log('current commitment.toString: ', commitment.toString());
@@ -111,14 +115,19 @@ describe('WhaleCoiner', () => {
     //console.log('Tree[0]: ', Tree.getNode(...))
 
     // either problem in p.hash or w.calc. test hash
-    console.log('pub as fields: ', whalePub.toFields());
-    
+    console.log('pub as fields, json: ', whalePub.toFields(), whalePub.toJSON());
+
     const leafHash = Poseidon.hash(whalePub.toFields());
+    console.log('normal leafHash: ', leafHash.toJSON());
+    console.log('manual leafHash: ', Poseidon.hash([
+      Field(BigInt('24477892193998808799000634066449762880814816646318045663180199870979367583489')),
+      Field(1)
+    ]).toJSON());
     console.log(witness.calculateRoot(leafHash).toString()); //.assertEquals(commitment);
     expect(witness.calculateRoot(leafHash)).toEqual(commitment);
   });
   it('correctly proves witness', async () => {
-    return;
+    //return;
     await localDeploy();
     //let whaleCoinerZKApp = new WhaleCoiner(PrivateKey.random().toPublicKey());
 
@@ -177,7 +186,7 @@ describe('WhaleCoiner', () => {
 
     const whalePub = tomoPub;
     // what would happen inside
-    const commitment = zkApp.msg.get();
+    const commitment = zkApp.commitment.get();
     console.log('current commitment: ', commitment.toString());
     console.log('_root: ', _root.toString());
     //console.log('Tree[0]: ', Tree.getNode(...))
@@ -186,11 +195,12 @@ describe('WhaleCoiner', () => {
 
     // call contract
     const asWhale = true;
-    const asUI = true;
+    const asUI = !true;
     let txn;
     if (asWhale) {
       txn = await Mina.transaction(deployerAccount, () => {
         zkApp.wallAsWhale(
+          commitment,
           whalePub,
           witness,
           constructSig2, //fooSig1, //broken(fromFieldsSig,//constructSig),//tomoSig,

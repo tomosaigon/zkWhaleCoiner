@@ -50,7 +50,8 @@ const functions = {
     state.zkapp = new state.WhaleCoiner!(publicKey);
   },
   getNum: async (args: {}) => {
-    const currentNum = await state.zkapp!.num.get();
+    //const currentNum = await state.zkapp!.num.get();
+    const currentNum = await state.zkapp!.commitment.get(); // XXX
     return JSON.stringify(currentNum.toJSON());
   },
   getMsg: async (args: {}) => {

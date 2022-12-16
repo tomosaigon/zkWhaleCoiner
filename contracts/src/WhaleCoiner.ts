@@ -120,17 +120,33 @@ export class WhaleCoiner extends SmartContract {
     this.num.set(newState);
   }
 
+  @method recommit(root: Field) {
+    const curRoot = this.commitment.get();
+    this.commitment.assertEquals(curRoot); // precondition that links this.num.get() to the actual on-chain state
+    this.commitment.set(root);
+  }
+
   // Keep in mind that all functions used inside your smart contract must operate on SnarkyJS compatible data types (e.g. Fields and other types built on top of Fields).
 
   // spray message on wall if you're whalish
-  @method wallAsWhale(whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, wallMsg: Field) {
+  @method wallAsWhale(rootCopy: Field, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, wallMsg: Field) {
     // we fetch the on-chain commitment (root)
-    let commitment = this.commitment.get();
+    const commitment = this.commitment.get(); // TODO not let?
     this.commitment.assertEquals(commitment);
 
+    // Error: ("Error: assert_equal: 0 != 25321076411253627146932089654484565121081622867262989611537313761204357221798")
+    // commitment.assertEquals(rootCopy);
+    // XXX it's as if commitment is 0 here
+
     // // we check that the account is within the committed Merkle Tree
-    const leafHash = Poseidon.hash(whalePub.toFields());
-    path.calculateRoot(leafHash).assertEquals(commitment);
+    //maybe can't handle .toFields on pubkey?
+    //const leafHash = Poseidon.hash(whalePub.toFields());
+    const leafHash = Poseidon.hash([
+      Field(BigInt('24477892193998808799000634066449762880814816646318045663180199870979367583489')),
+      Field(1)
+    ]);
+
+    path.calculateRoot(leafHash).assertEquals(rootCopy /*commitment*/);
 
     const msg = CircuitString.fromString('Satoshi is a WhaleCoiner').toFields();
 

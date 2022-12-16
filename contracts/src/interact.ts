@@ -110,11 +110,11 @@ let tx = await Mina.transaction({ feePayerKey: zkAppKey, fee: 0.1e9 }, () => {
   // Error: ("Error: assert_equal: 25321076411253627146932089654484565121081622867262989611537313761204357221798 != 0")
   // 1. try disable sig verify - same error
   // 2. try disable calc root - that worked
-  //zkApp.wallAsWhale(whalePub, witness, sig, wallMsg);
+  zkApp.wallAsWhale(Tree.getRoot(), whalePub, witness, sig, wallMsg);
   
 
   // works
-  zkApp.wallfromUI(wallMsg);
+  //zkApp.wallfromUI(wallMsg);
   
   
   // zkApp.wallfromUI(whalePub.toFields()[0], whalePub.toFields()[1], 
