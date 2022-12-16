@@ -17,6 +17,8 @@ https://berkeley.minaexplorer.com/wallet/B62qpJ4WFdXbah1TMnctXq2Hmsv4mEgr16BZgTC
 - Merkle tree generated and data stored offchain on IPFS with a hash
 - Whale address lookup
 
+![WhaleCoiner UI screenshot](ui/public/whalecoiner-ui.png)
+
 ## How to use the web app
 
 1. Load web page and wait for `SnarkyJS Ready` to appear.
