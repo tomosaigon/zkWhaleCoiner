@@ -20,6 +20,7 @@ import {
   Poseidon,
   Signature,
   PublicKey,
+  Scalar,
 } from 'snarkyjs';
 import fs from 'fs/promises';
 import { WhaleCoiner } from './WhaleCoiner.js';
@@ -89,7 +90,7 @@ let tx = await Mina.transaction({ feePayerKey: zkAppKey, fee: 0.1e9 }, () => {
   let witness = new MyMerkleWitness(wit);
   const sig = Signature.fromJSON({
     r: '24756403745565155334343141240729212829194956404851084071603591710242651547325',
-    s: '25284399962144351938259578951164638075292706477803146509961794774712565708371'
+    s: '25284399962144351938259578951164638075292706477803146509961794774712565708371',
   })
   const wallMsg = Field(0x696e6e6974); // 'innit'
                         //696e6e6974
@@ -99,8 +100,16 @@ let tx = await Mina.transaction({ feePayerKey: zkAppKey, fee: 0.1e9 }, () => {
 
   // Error: ("Error: assert_equal: 25321076411253627146932089654484565121081622867262989611537313761204357221798 != 0")
   //zkApp.wallAsWhale(PublicKey.fromBase58('B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn'), witness, sig, wallMsg);
-  zkApp.wallAsWhale(PublicKey.fromBase58('B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn'), /*witness,*/ sig, wallMsg);
 
+  // "message": "Couldn't send zkApp command: (Verification_failed Invalid_proof)",
+  //zkApp.wallAsWhale(PublicKey.fromBase58('B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn'), /*witness,*/ sig, wallMsg);
+
+  const tomoPub58 = 'B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn';
+  const whalePub = PublicKey.fromBase58(tomoPub58);
+  zkApp.wallfromUI(whalePub.toFields()[0], whalePub.toFields()[1], 
+    Field(BigInt("24756403745565155334343141240729212829194956404851084071603591710242651547325")),
+    Scalar.fromJSON("25284399962144351938259578951164638075292706477803146509961794774712565708371"),
+    wallMsg);
   // Account_app_state_0_precondition_unsatisfied - with zk app addy https://berkeley.minaexplorer.com/transaction/CkpZwLGpLnajgfnaMT7PJeyWcqqggMnMmoYArbiaqr5miEXK1aomx
   //zkApp.wallAsWhale(PublicKey.fromBase58('B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn'), witness, sig, wallMsg);
 });

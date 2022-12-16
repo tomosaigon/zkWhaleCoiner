@@ -156,6 +156,8 @@ function SignedMessage(props: any) {
 
           const leafIdx = new UInt32(0);
           const whalePub = PublicKey.fromBase58(newAddr);
+          console.log(whalePub);
+          const [whalePubX, whalePubIsOdd] = whalePub.toFields(); 
           const Tree = new MerkleTree(8);
           // gets a plain witness for leaf at index
           // TypeError: this.value.toBigInt is not a function
@@ -167,7 +169,7 @@ function SignedMessage(props: any) {
           const wallMsg = Field(str2int(newWallMsg));
 
           // const onSendWallTransaction = async (leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, num: UInt32, wallMsg: Field) 
-          props.onSendWallTransaction(leafIdx, whalePub, path, sig, num, wallMsg);
+          props.onSendWallTransaction(leafIdx, whalePubX, whalePubIsOdd, path, sig, num, wallMsg);
         }}>Write on wall</button>
         <button onClick={() => props.onSendWallTransaction()} >click me</button>
       </div>
@@ -313,16 +315,16 @@ export default function App({ Component, pageProps }: AppProps) {
   }
 
   
-  const onSendWallTransaction = async (leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, num: UInt32, wallMsg: Field) => {
+  const onSendWallTransaction = async (leafIdx: UInt32, whalePubX: Field, whalePubIsOdd: Field, path: MyMerkleWitness, sig: Signature, num: UInt32, wallMsg: Field) => {
     setState({ ...state, creatingTransaction: true });
-    console.log(leafIdx, whalePub, path, sig, num, wallMsg);
+    console.log(leafIdx, whalePubX, whalePubIsOdd, path, sig, num, wallMsg);
 
 
     const zkAppAddress = 'B62qpJ4WFdXbah1TMnctXq2Hmsv4mEgr16BZgTCkNLY6uLw4VcsjDPY';
     // const tx = await (window as any).mina.transaction(() => {
     //   // error - unhandledRejection: ReferenceError: Blob is not defined
     //   //const ContractInstance = new WhaleCoiner(PublicKey.fromBase58(zkAppAddress));
-    //   //ContractInstance.wallAsWhale(leafIdx, whalePub, path, sig, num, wallMsg);
+    //   //ContractInstance.wallAsWhale(whalePub, sig, wallMsg);
     // });
 
     //return;
@@ -332,7 +334,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
     // createWallTransaction(leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, num: UInt32, wallMsg: Field) 
     // args: { leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, num: UInt32, wallMsg: Field }
-    await state.zkappWorkerClient!.createWallTransaction(/*leafIdx,*/ whalePub, /*path,*/ sig, /*num,*/ wallMsg);
+    await state.zkappWorkerClient!.createWallTransaction(/*leafIdx,*/ whalePubX, whalePubIsOdd, /*path,*/ sig, /*num,*/ wallMsg);
 
     console.log('creating proof...');
     await state.zkappWorkerClient!.proveWallTransaction();

@@ -13,6 +13,7 @@ import {
   CircuitString,
   Signature,
   Bool,
+  Scalar,
 } from 'snarkyjs';
 const whales = [
   { "n": "tomo1", "a": "B62qiVkf7fKpYyo1UMrHyYVaitGyYHogTuarN3f6gZsqoCatm1DEqXn" },
@@ -110,6 +111,8 @@ export class WhaleCoiner extends SmartContract {
     this.num.set(newState);
   }
 
+  // Keep in mind that all functions used inside your smart contract must operate on SnarkyJS compatible data types (e.g. Fields and other types built on top of Fields).
+
   // spray message on wall if you're whalish
   @method wallAsWhale(/*leafIdx: UInt32,*/ whalePub: PublicKey, /*path: MyMerkleWitness,*/ sig: Signature,  /*num: UInt32,*/ wallMsg: Field) {
     // we fetch the on-chain commitment (root)
@@ -120,7 +123,69 @@ export class WhaleCoiner extends SmartContract {
     // const leafHash = Poseidon.hash(whalePub.toFields());
     // path.calculateRoot(leafHash).assertEquals(commitment);
 
+    /* maybe  try
+    // check the initial state matches what we expect
+    const rootBefore = leafWitness.calculateRoot(numberBefore);
+    rootBefore.assertEquals(initialRoot);
+    */
+
     const msg = CircuitString.fromString('Satoshi is a WhaleCoiner').toFields();
+
+    sig.verify(whalePub, msg).assertTrue();
+
+    //this.num.set(Field(num.toFields()[0]));
+    this.msg.set(wallMsg); // str2int
+  }
+
+  @method wallfromUI(/*leafIdx: UInt32,*/ whalePubIsOdd: Field, whalePubX: Field,/*PublicKey,*/ /*path: MyMerkleWitness,*/ /*sig: Signature,*/ r: Field, s: Scalar, /*num: UInt32,*/ wallMsg: Field) {
+    // we fetch the on-chain commitment (root)
+    let commitment = this.commitment.get();
+    this.commitment.assertEquals(commitment);
+
+    // // we check that the account is within the committed Merkle Tree
+    // const leafHash = Poseidon.hash(whalePub.toFields());
+    // path.calculateRoot(leafHash).assertEquals(commitment);
+
+    /* maybe  try
+    // check the initial state matches what we expect
+    const rootBefore = leafWitness.calculateRoot(numberBefore);
+    rootBefore.assertEquals(initialRoot);
+    */
+   
+    const msg = CircuitString.fromString('Satoshi is a WhaleCoiner').toFields();
+
+    // const sig = new Signature(r, s);
+    // this fails on assertTrue: const sig = Signature.fromFields([r, s]);
+      // also fails on assert: const sig = Signature.fromFields([s, r]);
+    // //    Field(BigInt("11149866380985503299463982621713898158386384905365504586658985081080436971813")),
+    // //    Field(BigInt("27805392407476107597780241785910086576642409128638979382253461373350709924352"))
+    // // );
+
+    // this works
+    // const sig = Signature.fromJSON({
+    //   r: '24756403745565155334343141240729212829194956404851084071603591710242651547325',
+    //   s: '25284399962144351938259578951164638075292706477803146509961794774712565708371'
+    // })
+
+    // Signature constructor called with 1 arguments, but expected 2: const sig = new Signature([r, s]);
+    // this works.. but may cause: Error: Can't evaluate prover code outside an as_prover block
+    //const sig = Signature.fromJSON({r: r.toString(), s: s.toString()});
+
+    // try interact even though assert fails - at least this deploys
+    // const sig = Signature.fromFields([
+    //    Field(BigInt("11149866380985503299463982621713898158386384905365504586658985081080436971813")),
+    //    Field(BigInt("27805392407476107597780241785910086576642409128638979382253461373350709924352"))
+    // ]);
+
+    // passed in PublicKey object from UI missing .toGroup.
+    // base58 string not provable. try field[]. array not provable either.
+    const whalePub = PublicKey.fromFields([whalePubIsOdd, whalePubX]);
+    
+
+    const sig = new Signature(
+      r,//Field(BigInt("24756403745565155334343141240729212829194956404851084071603591710242651547325")),
+      s,//Scalar.fromJSON("25284399962144351938259578951164638075292706477803146509961794774712565708371")
+    );
     sig.verify(whalePub, msg).assertTrue();
 
     //this.num.set(Field(num.toFields()[0]));

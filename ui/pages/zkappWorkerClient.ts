@@ -57,9 +57,9 @@ export default class ZkappWorkerClient {
     return this._call('proveUpdateTransaction', {});
   }
 
-  createWallTransaction(/*leafIdx: UInt32,*/ whalePub: PublicKey, /*path: MyMerkleWitness,*/ sig: Signature, /*num: UInt32,*/ wallMsg: Field) {
+  createWallTransaction(/*leafIdx: UInt32,*/ whalePubX: Field, whalePubIsOdd: Field, /*path: MyMerkleWitness,*/ sig: Signature, /*num: UInt32,*/ wallMsg: Field) {
     // createWallTransaction: async (args: { leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature, num: UInt32, wallMsg: Field }) 
-    return this._call('createWallTransaction', {/*leafIdx,*/ whalePub, /*path,*/ sig, /*num,*/ wallMsg});
+    return this._call('createWallTransaction', {/*leafIdx,*/ whalePubX, whalePubIsOdd, /*path,*/ sig:sig, /*num,*/ wallMsg:wallMsg});
   }
 
   proveWallTransaction() {

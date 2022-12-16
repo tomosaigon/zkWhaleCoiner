@@ -69,10 +69,16 @@ const functions = {
   },
   
   // wallAsWhale(leafIdx: UInt32, whalePub: PublicKey, path: MyMerkleWitness, sig: Signature,  num: UInt32, wallMsg: Field) 
-  createWallTransaction: async (args: { /*leafIdx: UInt32,*/ whalePub: PublicKey, /*path: MyMerkleWitness,*/ sig: Signature, /*num: UInt32,*/ wallMsg: Field }) => {
+  createWallTransaction: async (args: { /*leafIdx: UInt32,*/ whalePubX: Field, whalePubIsOdd: Field, /*path: MyMerkleWitness,*/ sig: Signature, /*num: UInt32,*/ wallMsg: Field }) => {
     const transaction = await Mina.transaction(() => {
       console.log(args);
-      state.zkapp!.wallAsWhale(/*args.leafIdx,*/ args.whalePub, /*args.path,*/ args.sig, /*args.num,*/ args.wallMsg);
+      console.log('maybe sig object not having verify');
+      console.log(args.sig.verify);
+      //console.log(args.whalePub.toJSON()); <- not a function
+      //console.log(args.whalePub.toFields()); <<- not a function either
+      // .toJSON  not a function?? console.log('scalar   s:', args.sig.s.toJSON());
+      //state.zkapp!.wallAsWhale(/*args.leafIdx,*/ args.whalePub, /*args.path,*/ args.sig, /*args.num,*/ args.wallMsg);
+      state.zkapp!.wallfromUI(args.whalePubIsOdd, args.whalePubX, args.sig.r, args.sig.s, args.wallMsg);
     }
     );
     state.transaction = transaction;
