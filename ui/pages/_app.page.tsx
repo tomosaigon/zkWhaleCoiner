@@ -129,6 +129,7 @@ function SignedMessage(props: any) {
       <div className={styles.container} style={{ backgroundColor: 'beige' }}>
         <h2>Write your message on the wall</h2>
         <div>
+          <p>Example: "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks."</p>
           <form>
             <input id='wallMsg' name="field" value={newWallMsg} style={{ width: '100%' }} onChange={(e) => setWallMsg(e.target.value)} />
             <label htmlFor='wallMsg'>Your desired message</label>

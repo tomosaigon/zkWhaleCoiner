@@ -1,10 +1,11 @@
 # WhaleCoiner
 
-Zero-knowledge proof smart contract using SnarkyJS/Mina to do cool things if you can prove you're a "WhaleCoiner" (or a wholecoiner).
+Zero-knowledge proof smart contract using SnarkyJS/Mina to do cool things if you can prove you're a "WhaleCoiner" (or a wholecoiner). The "prover" stays anonymous because their identity is never sent on chain in a transaction, only a ZKP that they are a Whale.
 
-Cool things: Write a message on the global WhaleCoiners Wall!
+Cool things for now: Write a message on the global WhaleCoiners Wall!
+Cooler things next: Mint NFTs, access token-gated clubs, vote...
 
-Contract deployed on Berkeley:
+Live contract deployed on Berkeley:
 https://berkeley.minaexplorer.com/wallet/B62qpJ4WFdXbah1TMnctXq2Hmsv4mEgr16BZgTCkNLY6uLw4VcsjDPY
 
 
@@ -12,10 +13,11 @@ https://berkeley.minaexplorer.com/wallet/B62qpJ4WFdXbah1TMnctXq2Hmsv4mEgr16BZgTC
 
 - Global wall state that anyone can write to by proving they're a member of an elite group
 - Signer / wallet owner is never revealed so Whales can stay anonymous
-- Messaage signing for multiple chains by implementing their hashing algorithm. E.g. Bitcoin, Ethereum, Mina.
+- Messaage signing for multiple chains by implementing their hashing algorithm. E.g. Bitcoin, Ethereum, Mina, depending on SnarkyJS.
 - Auro web wallet integration
 - Merkle tree generated and data stored offchain on IPFS with a hash
 - Whale address lookup
+- Command line interface
 
 ![WhaleCoiner UI screenshot](ui/public/whalecoiner-ui.png)
 
