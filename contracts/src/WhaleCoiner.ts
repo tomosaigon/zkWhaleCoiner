@@ -136,16 +136,16 @@ export class WhaleCoiner extends SmartContract {
 
     // Error: ("Error: assert_equal: 0 != 25321076411253627146932089654484565121081622867262989611537313761204357221798")
     // commitment.assertEquals(rootCopy);
+    // but this OK
     this.commitment.assertEquals(rootCopy);
-    // XXX it's as if commitment is 0 here
 
     // // we check that the account is within the committed Merkle Tree
     //maybe can't handle .toFields on pubkey?
-    //const leafHash = Poseidon.hash(whalePub.toFields());
-    const leafHash = Poseidon.hash([
-      Field(BigInt('24477892193998808799000634066449762880814816646318045663180199870979367583489')),
-      Field(1)
-    ]);
+    const leafHash = Poseidon.hash(whalePub.toFields());
+    // const leafHash = Poseidon.hash([
+    //   Field(BigInt('24477892193998808799000634066449762880814816646318045663180199870979367583489')),
+    //   Field(1)
+    // ]);
 
     path.calculateRoot(leafHash).assertEquals(rootCopy /*commitment*/);
 
