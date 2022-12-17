@@ -44,9 +44,33 @@ node build/src/interact.js berwhale # optional
 zk deploy berkeley # run zk config first
 ```
 
+The WhaleCoiners list in JSON format is at: ipfs://bafkreig6xuovd5lqxaalr4bx6bj6oeuufy77nngq2gq5ciciisp7ttmbay
+
+
 #### Front End
 ```
 cd ui
 npm install # once
 npm run dev
+```
+
+Then optionally export to static files in `/out` and host with a web server.
+
+```
+npm run build
+npm run export
+```
+
+The web app will first show "Setting up SnarkyJS..." and then "SnarkyJS is Ready". The contract is initialized with the wall message "init".
+
+You should see ServiceWorker registration messages in the console like:
+```
+COOP/COEP Service Worker registered 
+Reloading page to make use of COOP/COEP Service Worker.
+```
+
+To get around "failed to register" errors from `coi-serviceworker` which will cause any `SharedArrayBuffer` calls to fail, 
+try to reopen Chrome to allow ServiceWorker on `localhost` (set `PORT`) with a real SSL certificate:
+```
+chrome --ignore-certificate-errors --unsafely-treat-insecure-origin-as-secure=https://localhost:$PORT
 ```
